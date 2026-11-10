@@ -21,7 +21,19 @@ var TEXTS = {
   formTitle: "Tus datos",
   formEmpty: "Aquí irá el formulario para rellenar el currículum.",
   previewTitle: "Vista previa",
-  previewEmpty: "Aquí se verá la hoja A4 del currículum."
+
+  // Titles printed on the CV sheet
+  cvProfile: "Perfil",
+  cvContact: "Contacto",
+  cvLanguages: "Idiomas",
+  cvTools: "Herramientas",
+  cvOther: "Otros datos",
+  cvFooter: "Currículum vitae",
+  cvExperience: "Experiencia",
+  cvEducation: "Titulaciones académicas",
+  cvCourses: "Cursos y otras actividades formativas",
+  cvProjects: "Proyectos",
+  cvSkills: "Habilidades"
 };
 
 if (typeof module !== "undefined") module.exports = TEXTS;

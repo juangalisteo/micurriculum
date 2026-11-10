@@ -1,0 +1,99 @@
+/*
+ * MiCurriculum · CV sheet styles, copied from the approved template.
+ * Every rule starts with .cv, so it never touches the interface.
+ * The theme colors (--lateral, --acento…) are set on the .cv element by render.js.
+ *
+ * Project:   MiCurriculum
+ * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
+ * License:   GPL-3.0-or-later (see LICENSE)
+ * Copyright (C) 2026 Juan Bautista Galisteo Marqués.
+ */
+
+@font-face { font-family: Plex; src: url(../fonts/IBMPlexSans-Regular.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: Plex; src: url(../fonts/IBMPlexSans-Medium.woff2) format("woff2"); font-weight: 500; }
+@font-face { font-family: Plex; src: url(../fonts/IBMPlexSans-SemiBold.woff2) format("woff2"); font-weight: 600; }
+@font-face { font-family: Chorus; src: url(../fonts/TeXGyreChorus.woff) format("woff"); }
+
+/* Reset inside the sheet (the template did this on the whole page). */
+.cv, .cv * { box-sizing: border-box; margin: 0; padding: 0; }
+/* In the template ::before and ::after keep the browser default; app.css changes it, so it is undone here. */
+.cv *::before, .cv *::after { box-sizing: content-box; }
+.cv a { color: inherit; text-decoration: none; }
+
+/* ---------- A4 sheet ---------- */
+.cv {
+  width: 210mm; height: 297mm; display: grid; overflow: hidden; background: var(--fondo);
+  font-family: var(--letra); color: var(--texto); font-size: 16px; line-height: normal; text-align: left;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.cv.izq { grid-template-columns: 72mm 1fr; }
+.cv.dcha { grid-template-columns: 1fr 72mm; }
+.cv.dcha .lado { order: 2; }
+.cv.una { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+
+/* ---------- Side column ---------- */
+.cv .lado { background: var(--lateral); color: var(--lateral-texto); padding: 13mm 9mm 10mm; display: flex; flex-direction: column; gap: 5.2mm; position: relative; overflow: hidden; isolation: isolate; }
+.cv .cabeza { position: relative; padding: 2mm 0 3mm; }
+.cv .mono { position: absolute; z-index: -1; left: 16mm; top: -14mm; width: 84mm; height: auto; fill: none; stroke: var(--acento); stroke-width: .6; opacity: .34; }
+.cv .mono text { font: 600 112px var(--letra); letter-spacing: -4px; text-anchor: middle; }
+.cv .foto { position: relative; width: 40mm; height: 40mm; margin: 0 auto; }
+.cv .foto::before { content: ""; position: absolute; inset: 2.4mm -2.4mm -2.4mm 2.4mm; border: .3mm solid var(--acento); border-radius: 2.6mm; }
+.cv .foto img { position: relative; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 2.6mm; box-shadow: 0 5mm 10mm rgba(0, 0, 0, .35); }
+.cv .iniciales { position: relative; width: 40mm; height: 40mm; margin: 0 auto; border-radius: 2.6mm; display: grid; place-items: center; border: .4mm solid var(--acento); font: 600 24pt var(--letra); color: var(--acento); }
+.cv .nombre { font: 600 15pt/1.15 var(--letra); letter-spacing: .02em; }
+.cv .puesto { margin-top: 2mm; font: 500 7pt var(--letra); letter-spacing: .3em; text-transform: uppercase; color: var(--acento); }
+.cv .raya { width: 12mm; height: .7mm; background: var(--acento); margin-top: 4mm; }
+.cv .lado h3 { font: 600 6.6pt var(--letra); letter-spacing: .22em; text-transform: uppercase; color: var(--acento); margin-bottom: 2.4mm; }
+.cv .perfil p + p { margin-top: 2mm; }
+.cv .perfil strong { font-weight: 600; color: var(--lateral-texto); letter-spacing: -0.02em; }
+.cv .perfil p { font-size: 7.3pt; line-height: 1.55; opacity: .85; text-align: justify; hyphens: auto; }
+.cv .lista { list-style: none; display: grid; gap: 2mm; font-size: 7.4pt; line-height: 1.35; }
+.cv .lista li { display: flex; gap: 2.4mm; align-items: flex-start; }
+.cv .lista svg { width: 3.6mm; height: 3.6mm; flex: none; color: var(--acento); margin-top: .2mm; }
+.cv .lista small { opacity: .7; }
+.cv .hb b { font-weight: 600; }
+.cv .hb small { opacity: .75; }
+.cv .pie { margin-top: auto; font: 600 7pt var(--letra); letter-spacing: .3em; opacity: .35; text-transform: uppercase; }
+
+/* ---------- Main column ---------- */
+.cv .main { padding: 14mm 12mm 13mm 11mm; display: flex; flex-direction: column; gap: 7.5mm; }
+.cv .main h2 { display: flex; align-items: center; gap: 3mm; font: 600 12pt var(--letra); letter-spacing: .06em; text-transform: uppercase; color: var(--titulos); margin-bottom: 4.5mm; }
+.cv .main h2::after { content: ""; flex: 1; height: 0; border-bottom: .5mm dotted var(--linea); }
+.cv .tl { list-style: none; border-left: .3mm solid var(--linea); margin-left: 1.2mm; padding-left: 5mm; display: grid; gap: 5.2mm; }
+.cv .tl li { position: relative; }
+.cv .tl li::before { content: ""; position: absolute; left: -6.5mm; top: 1.2mm; width: 2.2mm; height: 2.2mm; border-radius: 50%; background: var(--fondo); border: .5mm solid var(--acento); }
+.cv .tl .t { display: flex; justify-content: space-between; gap: 4mm; align-items: baseline; }
+.cv .tl b { font-size: 9pt; font-weight: 600; color: var(--titulos); }
+.cv .tl .f { font-size: 7.8pt; color: var(--acento-texto); font-weight: 500; white-space: nowrap; }
+.cv .tl .s { font-size: 8pt; color: var(--suave); margin-top: .4mm; }
+.cv .tl p { font-size: 7.2pt; line-height: 1.5; color: var(--suave); margin-top: .8mm; }
+.cv .proy { display: grid; gap: 3mm; }
+.cv .proy .t { display: flex; justify-content: space-between; align-items: baseline; }
+.cv .proy b { font-size: 8.2pt; font-weight: 600; color: var(--titulos); }
+.cv .proy .e { font-size: 6.6pt; color: var(--acento-texto); font-weight: 500; }
+.cv .proy p { font-size: 7.2pt; line-height: 1.5; color: var(--suave); margin-top: .6mm; }
+.cv .chips { display: flex; flex-wrap: wrap; gap: 1.2mm; margin-top: 1.4mm; }
+.cv .chips span { font-size: 6.2pt; padding: .5mm 2mm; border-radius: 9mm; border: .25mm solid var(--linea); color: var(--suave); }
+.cv .hab { display: grid; grid-template-columns: 28mm 1fr; gap: 2.2mm 4mm; font-size: 7.4pt; line-height: 1.45; }
+.cv .hab dt { font-weight: 600; color: var(--titulos); }
+.cv .hab dd { color: var(--suave); }
+
+/* ---------- Methodology box ---------- */
+.cv .meto {
+  margin-top: auto; min-height: 44mm; position: relative; overflow: hidden; isolation: isolate; border-radius: 3mm;
+  background: var(--lateral); color: var(--lateral-texto); display: flex; flex-direction: column; justify-content: center; gap: 0; padding: 7mm 9mm 8mm;
+  background-image: radial-gradient(color-mix(in srgb, var(--acento) 22%, transparent) .35mm, transparent .4mm);
+  background-size: 4.2mm 4.2mm;
+}
+.cv .meto::after { content: ""; position: absolute; inset: auto 0 0 0; height: 34%; background: rgba(0, 0, 0, .28); clip-path: polygon(0 70%, 100% 0, 100% 100%, 0 100%); z-index: -1; }
+.cv .meto .mono { left: auto; right: -12mm; top: 50%; transform: translateY(-50%); width: 56mm; opacity: .2; }
+.cv .meto .pluma, .cv .meto .frase { position: relative; top: -4.4mm; } /* lifts the text by 10 % of the box */
+.cv .meto .pluma { font-family: Chorus, "Segoe Script", cursive; font-size: 34pt; line-height: .95; color: var(--acento); }
+.cv .meto .frase { margin-top: 2.8mm; text-align: left; font: 600 13pt/1.3 var(--letra); color: var(--lateral-texto); }
+
+/* ---------- Single column: header on top ---------- */
+.cv.una .lado { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 5mm 8mm; padding: 12mm 14mm; }
+.cv.una .lado > * { flex: 1 1 40%; }
+.cv.una .cabeza { flex: none; }
+.cv.una .foto, .cv.una .iniciales { width: 28mm; height: 28mm; margin: 0; }
+.cv.una .pie { display: none; }

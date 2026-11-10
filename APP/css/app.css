@@ -107,15 +107,14 @@ body {
     var(--background);
 }
 
-/* A4 sheet: 210 × 297 mm */
+/* A4 sheet: 210 × 297 mm. The edge is an outline, so the CV keeps its exact size. */
 .sheet {
   flex: none;
   width: 210mm;
   height: 297mm;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
   background: var(--surface);
-  border: 1px solid var(--border);
+  outline: 1px solid var(--border);
   box-shadow: 0 8px 28px rgba(34, 52, 61, 0.12);
 }
 

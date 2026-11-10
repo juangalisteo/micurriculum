@@ -1,5 +1,6 @@
 /*
- * MiCurriculum · start-up: puts the texts and the version on the screen.
+ * MiCurriculum · start-up: puts the texts and the version on the screen
+ * and paints the sample CV on the sheet.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -30,6 +31,7 @@ function applyTexts(doc, texts) {
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", function () {
     applyTexts(document, TEXTS);
+    renderSheet(document, SAMPLE_DATA, DEFAULT_LOOK);
   });
 }
 
