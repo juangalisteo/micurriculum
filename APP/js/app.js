@@ -1,6 +1,6 @@
 /*
- * MiCurriculum · start-up: puts the texts and the version on the screen
- * and paints the sample CV on the sheet.
+ * MiCurriculum · start-up: puts the texts and the version on the screen,
+ * builds the form and paints the CV again after every change.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -31,7 +31,9 @@ function applyTexts(doc, texts) {
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", function () {
     applyTexts(document, TEXTS);
-    renderSheet(document, SAMPLE_DATA, DEFAULT_LOOK);
+    buildForm(document, STATE, TEXTS);
+    STATE.onChange(function (data, look) { renderSheet(document, data, look); });
+    renderSheet(document, STATE.data, STATE.look);
   });
 }
 

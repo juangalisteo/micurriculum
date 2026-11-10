@@ -79,3 +79,4 @@ AGENT_AI/
 Cosas que parecen mejorables pero son así a propósito. No se cambian ni se proponen como mejora sin preguntar antes al propietario. Se apuntan aquí a medida que aparezcan, con su motivo.
 
 - La licencia es GPL-3.0 (`LICENSE`), siempre, en todos los proyectos del propietario.
+- Los nombres de los campos de datos (`nombre`, `perfil`, `contacto`, `tipo`, `texto`…) y de los temas (`marca`, `oceano`, `lateral`, `acento`…) van en español, aunque el resto del código va en inglés. Motivo: son los de la plantilla aprobada, y así sus datos y su aspecto encajan sin cambios (decisión del 10/11/2026, lote 2 de la fase C).

@@ -118,7 +118,110 @@ body {
   box-shadow: 0 8px 28px rgba(34, 52, 61, 0.12);
 }
 
-.empty { margin: 0; color: var(--muted); }
+/* ---------- Form ---------- */
+.form-section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: var(--surface);
+}
+
+.form-section > summary {
+  cursor: pointer;
+  padding: 10px 14px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.form-section > summary:hover { background: var(--row); }
+.form-section[open] > summary { border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0; }
+
+.form-body { padding: 12px 14px 14px; }
+
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+.field > label,
+.field-title {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.panel input[type="text"],
+.panel select,
+.panel textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.panel textarea { resize: vertical; line-height: 1.45; }
+
+.panel input:focus-visible,
+.panel select:focus-visible,
+.panel textarea:focus-visible,
+.panel button:focus-visible,
+.panel summary:focus-visible,
+.file-row input:focus-visible + .button {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.help { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.help-error { color: #A33A2B; }
+
+.file-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.button {
+  display: inline-block;
+  font: inherit;
+  font-weight: 500;
+  color: var(--accent-text);
+  background: var(--accent-surface);
+  border: 1px solid var(--gradient-strong);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.button:hover { background: var(--gradient-strong); }
+.button-quiet { color: var(--text); background: var(--surface); border-color: var(--border); }
+.button-quiet:hover { background: var(--row); }
+.button:disabled { opacity: .45; cursor: default; background: var(--surface); }
+
+/* Rows of a list (contact, and later the other lists) */
+.rows-list { list-style: none; margin: 0 0 10px; padding: 0; }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--row);
+}
+
+.row-fields { flex: 1; display: flex; gap: 6px; min-width: 0; }
+.row-field-select { flex: 0 0 108px; }
+.row-field-text { flex: 1; min-width: 0; }
+
+.row-buttons { display: flex; gap: 2px; }
+
+.icon-button {
+  width: 26px;
+  height: 26px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.icon-button:hover:not(:disabled) { background: var(--row); border-color: var(--border); }
+.icon-button:disabled { opacity: .3; cursor: default; }
 
 .visually-hidden {
   position: absolute;

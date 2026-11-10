@@ -15,6 +15,11 @@
  */
 "use strict";
 
+/* In Node, cleanSvg comes from svg-clean.js; in the browser that file is loaded first. */
+if (typeof module !== "undefined" && typeof cleanSvg === "undefined") {
+  var cleanSvg = require("./svg-clean.js").cleanSvg;
+}
+
 var CV_ICONS = {
   telefono: '<path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
   correo: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M3 7l9 6 9-6"/>',
@@ -134,7 +139,7 @@ function buildThemeStyle(theme, font) {
 /**
  * Returns the HTML of the whole CV.
  * data: same structure as SAMPLE_DATA. look: { tema, formato, letra }.
- * The monogram is the user's own SVG logo and is inserted as it is.
+ * The monogram is the user's own SVG logo, cleaned with cleanSvg() before it is inserted.
  */
 function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
   var esc = escapeHtml;
@@ -144,7 +149,7 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
   var layout = layouts.indexOf(l.formato) >= 0 ? l.formato : defaultLook.formato;
   var font = l.letra || defaultLook.letra;
   var initials = esc(getInitials(d.nombre));
-  var mono = d.monograma ? String(d.monograma).replace("<svg ", '<svg class="mono" ') : "";
+  var mono = d.monograma ? cleanSvg(d.monograma).replace(/^<svg\b/, '<svg class="mono"') : "";
 
   var contact = asList(d.contacto);
   var languages = asList(d.idiomas);

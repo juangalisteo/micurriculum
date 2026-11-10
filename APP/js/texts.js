@@ -19,8 +19,50 @@ var TEXTS = {
   versionLabel: "versión",
   pageTitle: "MiCurriculum · Haz tu currículum",
   formTitle: "Tus datos",
-  formEmpty: "Aquí irá el formulario para rellenar el currículum.",
   previewTitle: "Vista previa",
+
+  // Form: personal data
+  formPersonal: "Datos personales",
+  fieldName: "Nombre",
+  fieldJob: "Puesto",
+  fieldJobHelp: "Si lo dejas vacío, no sale en el CV.",
+  fieldPhoto: "Foto",
+  photoChoose: "Elegir foto",
+  photoRemove: "Quitar foto",
+  photoNone: "Sin foto: salen tus iniciales.",
+  photoSet: "Foto puesta.",
+  photoBusy: "Preparando la foto…",
+  photoError: "No se ha podido leer la imagen. Prueba con un archivo JPG o PNG.",
+  fieldLogo: "Logo",
+  logoChoose: "Elegir logo (.svg)",
+  logoRemove: "Quitar logo",
+  logoNone: "Sin logo: salen tus iniciales detrás de la foto.",
+  logoSet: "Logo puesto.",
+  logoError: "El archivo no es un SVG que se pueda usar.",
+
+  // Form: profile
+  formProfile: "Perfil",
+  fieldProfile: "Texto del perfil",
+  profileHelp: "**texto** = negrita. Una línea en blanco = párrafo nuevo.",
+
+  // Form: contact, and the rows of any list
+  formContact: "Contacto",
+  rowType: "Tipo",
+  rowText: "Texto",
+  rowNumber: "fila",
+  rowAdd: "Añadir fila",
+  rowRemove: "Quitar",
+  rowUp: "Subir",
+  rowDown: "Bajar",
+  listEmpty: "Todavía no hay ninguna fila.",
+  contactTypes: {
+    lugar: "Lugar",
+    telefono: "Teléfono",
+    web: "Web",
+    github: "GitHub",
+    correo: "Correo",
+    linkedin: "LinkedIn"
+  },
 
   // Titles printed on the CV sheet
   cvProfile: "Perfil",
