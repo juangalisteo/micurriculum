@@ -1,0 +1,20 @@
+# Sistema de trabajo con la IA (privado, nunca se sube)
+00_INICIO_CHAT.md
+00_CONFIG/
+AGENT_AI/
+
+# Datos personales de cada usuario (solo se sube la carpeta vacía)
+MY_CV/*
+!MY_CV/.gitkeep
+
+# Plantilla del CV genérico (lleva datos personales)
+docs/PLANTILLA_CV_GENERICO/
+
+# Entorno y secretos
+.env
+*.log
+
+# Archivos de Windows y macOS
+Thumbs.db
+desktop.ini
+.DS_Store
