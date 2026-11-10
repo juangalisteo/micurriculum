@@ -1,5 +1,6 @@
 /*
- * MiCurriculum · tests for form.js (contact links and photo size)
+ * MiCurriculum · tests for form.js (contact links, photo size, tags, rows
+ * and the order of the sections)
  * and state.js (the data and the rows of a list).
  *
  * Project:   MiCurriculum
@@ -15,7 +16,10 @@ const assert = require("node:assert/strict");
 const TEXTS = require("../APP/js/texts.js");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
 const { DEFAULT_LOOK } = require("../APP/js/themes.js");
-const { CONTACT_TYPES, buildContactLink, fitImageSize, updateContactLink } = require("../APP/js/form.js");
+const {
+  CONTACT_TYPES, buildContactLink, fitImageSize, updateContactLink,
+  parseTags, formatTags, getRowValue, setRowValue, orderMainSections
+} = require("../APP/js/form.js");
 const { addRow, removeRow, moveRow, createStore } = require("../APP/js/state.js");
 
 test("contact link: built from the type", () => {
@@ -96,4 +100,59 @@ test("store: starts with a copy of the sample data and tells about each change",
   assert.equal(SAMPLE_DATA.nombre, "Ana Ejemplo");
   assert.equal(SAMPLE_DATA.contacto.length, 6);
   assert.equal(SAMPLE_DATA.contacto[0].tipo, "lugar");
+});
+
+test("project tags: typed in one field, separated by commas", () => {
+  assert.deepEqual(parseTags("Diseño, Web ,, imprenta , "), ["Diseño", "Web", "imprenta"]);
+  assert.deepEqual(parseTags(""), []);
+  assert.deepEqual(parseTags("   "), []);
+  assert.deepEqual(parseTags(undefined), []);
+  assert.deepEqual(parseTags("Una sola"), ["Una sola"]);
+  assert.equal(formatTags(["Diseño", "Web"]), "Diseño, Web");
+  assert.equal(formatTags([]), "");
+  assert.equal(formatTags(undefined), "");
+  assert.deepEqual(parseTags(formatTags(["a", "b c"])), ["a", "b c"]);
+});
+
+test("rows: the tags field keeps a list, the rest keeps the text", () => {
+  const tags = { key: "etiquetas", format: formatTags, parse: parseTags };
+  const name = { key: "nombre" };
+  const list = [{ nombre: "Web", etiquetas: ["HTML", "CSS"] }];
+  assert.equal(getRowValue(list[0], tags), "HTML, CSS");
+  assert.equal(setRowValue(list, 0, tags, "HTML, CSS, JS"), true);
+  assert.deepEqual(list[0].etiquetas, ["HTML", "CSS", "JS"]);
+  setRowValue(list, 0, name, "Tienda");
+  assert.equal(list[0].nombre, "Tienda");
+  assert.equal(getRowValue({}, name), "");
+  assert.equal(setRowValue(list, 3, name, "x"), false);
+});
+
+test("methodology steps: each row is only a text", () => {
+  const step = { key: null };
+  const steps = ["Escuchar", "Ordenar"];
+  assert.equal(getRowValue(steps[1], step), "Ordenar");
+  setRowValue(steps, 1, step, "Diseñar");
+  addRow(steps, "");
+  setRowValue(steps, 2, step, "Ilusionar");
+  assert.deepEqual(steps, ["Escuchar", "Diseñar", "Ilusionar"]);
+  assert.equal(moveRow(steps, 2, -1), 1);
+  assert.deepEqual(steps, ["Escuchar", "Ilusionar", "Diseñar"]);
+});
+
+test("form sections of the main column follow the order of the CV", () => {
+  const keys = ["experiencia", "formacion", "cursos", "proyectos"];
+  assert.deepEqual(orderMainSections(keys, ["formacion", "experiencia", "cursos"]), ["formacion", "experiencia", "cursos", "proyectos"]);
+  assert.deepEqual(orderMainSections(keys, ["cursos", "nada"]), ["cursos", "experiencia", "formacion", "proyectos"]);
+  assert.deepEqual(orderMainSections(keys, undefined), keys);
+});
+
+test("every new text of the form exists", () => {
+  const keys = [
+    "formLanguages", "fieldLanguage", "fieldLevel", "formSkills", "skillsHelp", "fieldGroup", "fieldItems",
+    "formOther", "fieldOtherText", "fieldOtherDetail", "formExperience", "fieldCompany", "fieldDate", "fieldRole",
+    "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "formProjects",
+    "fieldProjectName", "fieldStatus", "fieldTags", "tagsHelp", "formMethod", "fieldMethodTitle", "methodHelp",
+    "fieldStep", "stepAdd"
+  ];
+  for (const key of keys) assert.equal(typeof TEXTS[key], "string", key);
 });

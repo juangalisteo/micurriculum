@@ -1,13 +1,14 @@
 /*
  * MiCurriculum · the form on the left panel.
  *
- * One folding section (<details>) per block: personal data, profile and
- * contact. Every change goes through STATE.update(), so the sheet is painted
- * again at once. createListEditor() is the reusable piece for any list of
- * rows (contact now; experience, courses… in the next batch).
+ * One folding section (<details>) per block of the CV, in the order it is
+ * printed: personal data, profile, contact, languages, tools, other data,
+ * the main column sections and the methodology. Every change goes through
+ * STATE.update(), so the sheet is painted again at once. createListEditor()
+ * is the reusable piece for every list of rows.
  *
- * buildContactLink() and fitImageSize() do not need the browser and are
- * tested in Node.
+ * buildContactLink(), fitImageSize(), the tag and row helpers and
+ * orderMainSections() do not need the browser and are tested in Node.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -75,6 +76,36 @@ function updateContactLink(row) {
   var link = buildContactLink(row.tipo, row.texto);
   if (link) row.enlace = link;
   else delete row.enlace;
+}
+
+/** "a, b,, c " → ["a", "b", "c"]: the project tags typed in one field. */
+function parseTags(text) {
+  return String(text == null ? "" : text).split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+}
+
+/** ["a", "b"] → "a, b": the tags shown in their field. */
+function formatTags(tags) {
+  return Array.isArray(tags) ? tags.join(", ") : String(tags == null ? "" : tags);
+}
+
+/**
+ * The text shown in the field of a row. A field without key is a row that
+ * is only a text (a methodology step). field.format turns the stored value
+ * into text (tags).
+ */
+function getRowValue(item, field) {
+  var value = field.key == null ? item : item == null ? undefined : item[field.key];
+  if (field.format) return field.format(value);
+  return value == null ? "" : String(value);
+}
+
+/** Stores the text of a field in the row at index. field.parse turns it back (tags). */
+function setRowValue(list, index, field, text) {
+  if (index < 0 || index >= list.length) return false;
+  var value = field.parse ? field.parse(text) : text;
+  if (field.key == null) list[index] = value;
+  else list[index][field.key] = value;
+  return true;
 }
 
 /* ---------- Small helpers for the page ---------- */
@@ -217,10 +248,14 @@ function readLogoFile(file, done) {
 /* ---------- Reusable list of rows ---------- */
 
 /**
- * Editor for a list of rows (contact now; more lists in the next batch).
+ * Editor for a list of rows (contact, experience, courses, steps…).
  * opts:
  *   getList()          the array in STATE.data (created if missing)
- *   fields             [{ key, label, kind: "text" | "select", options: [{ value, label }] }]
+ *   fields             [{ key, label, kind: "text" | "textarea" | "select",
+ *                         options: [{ value, label }], format, parse }]
+ *                      key null = the row is only a text (methodology steps)
+ *   stacked            true: the fields go one under the other, with their
+ *                      labels in sight (rows with many fields)
  *   newItem()          a new empty row
  *   onRowChange(row)   optional, after a field of a row changes
  *   addText            text of the add button
@@ -229,7 +264,7 @@ function readLogoFile(file, done) {
  */
 function createListEditor(doc, opts) {
   var texts = opts.texts;
-  var root = el(doc, "div", { class: "rows" });
+  var root = el(doc, "div", { class: opts.stacked ? "rows rows-stacked" : "rows" });
   var list = el(doc, "ol", { class: "rows-list" });
   var empty = el(doc, "p", { class: "help" }, texts.listEmpty);
   var add = el(doc, "button", { type: "button", class: "button" }, opts.addText || texts.rowAdd);
@@ -244,25 +279,33 @@ function createListEditor(doc, opts) {
   function buildField(item, index, field) {
     var id = newFieldId("row");
     var wrap = el(doc, "div", { class: "row-field row-field-" + (field.kind || "text") });
-    wrap.appendChild(el(doc, "label", { for: id, class: "visually-hidden" }, rowLabel(field.label, index)));
+    // Stacked rows show the label; short rows keep it for screen readers only.
+    var label = el(doc, "label", { for: id, class: opts.stacked ? "row-label" : "visually-hidden" }, opts.stacked ? field.label : rowLabel(field.label, index));
+    if (opts.stacked) label.appendChild(el(doc, "span", { class: "visually-hidden" }, " (" + texts.rowNumber + " " + (index + 1) + ")"));
+    wrap.appendChild(label);
     var input;
     if (field.kind === "select") {
       input = el(doc, "select", { id: id });
       field.options.forEach(function (o) { input.appendChild(el(doc, "option", { value: o.value }, o.label)); });
-      input.value = item[field.key] == null ? field.options[0].value : item[field.key];
+      input.value = getRowValue(item, field) || field.options[0].value;
+    } else if (field.kind === "textarea") {
+      input = el(doc, "textarea", { id: id, rows: field.rows || 3 });
+      input.value = getRowValue(item, field);
     } else {
       input = el(doc, "input", { id: id, type: "text", autocomplete: "off" });
-      input.value = item[field.key] == null ? "" : item[field.key];
+      input.value = getRowValue(item, field);
     }
+    var helpId = field.help ? id + "-help" : null;
+    if (helpId) input.setAttribute("aria-describedby", helpId);
     input.addEventListener(field.kind === "select" ? "change" : "input", function () {
       opts.update(function () {
-        var row = opts.getList()[index];
-        if (!row) return;
-        row[field.key] = input.value;
-        if (opts.onRowChange) opts.onRowChange(row);
+        var items = opts.getList();
+        if (!setRowValue(items, index, field, input.value)) return;
+        if (opts.onRowChange) opts.onRowChange(items[index]);
       });
     });
     wrap.appendChild(input);
+    if (field.help) wrap.appendChild(el(doc, "p", { class: "help", id: helpId }, field.help));
     return wrap;
   }
 
@@ -295,7 +338,7 @@ function createListEditor(doc, opts) {
     var rows = list.children;
     if (focusIndex < 0 || !rows[focusIndex]) { add.focus(); return; }
     if (action === "add") {
-      var first = rows[focusIndex].querySelector("input, select");
+      var first = rows[focusIndex].querySelector("input, select, textarea");
       if (first) first.focus();
       return;
     }
@@ -403,6 +446,114 @@ function buildForm(doc, state, texts) {
   });
   contact.body.appendChild(contactEditor.element);
   host.appendChild(contact.element);
+
+  /** A folding section with a list of rows of state.data[key]. */
+  function addListSection(title, key, opts) {
+    var section = buildFormSection(doc, title, false);
+    if (opts.help) section.body.appendChild(el(doc, "p", { class: "help section-help" }, opts.help));
+    var editor = createListEditor(doc, {
+      texts: texts,
+      update: state.update,
+      stacked: opts.stacked,
+      getList: opts.getList || function () {
+        if (!Array.isArray(state.data[key])) state.data[key] = [];
+        return state.data[key];
+      },
+      fields: opts.fields,
+      newItem: opts.newItem,
+      addText: opts.addText
+    });
+    section.body.appendChild(editor.element);
+    host.appendChild(section.element);
+    return section;
+  }
+  var text = function (key, label, extra) {
+    return Object.assign({ key: key, label: label, kind: "text" }, extra || {});
+  };
+
+  // Side column, in the order it is printed
+  addListSection(texts.formLanguages, "idiomas", {
+    fields: [text("idioma", texts.fieldLanguage), text("nivel", texts.fieldLevel)],
+    newItem: function () { return { idioma: "", nivel: "" }; }
+  });
+  addListSection(texts.formSkills, "habilidades", {
+    help: texts.skillsHelp, stacked: true,
+    fields: [text("grupo", texts.fieldGroup), text("items", texts.fieldItems)],
+    newItem: function () { return { grupo: "", items: "" }; }
+  });
+  addListSection(texts.formOther, "otros", {
+    fields: [text("texto", texts.fieldOtherText), text("detalle", texts.fieldOtherDetail)],
+    newItem: function () { return { texto: "", detalle: "" }; }
+  });
+
+  // Main column: the sections follow the order of the CV (data.orden)
+  var mainSections = {
+    experiencia: function () {
+      addListSection(texts.formExperience, "experiencia", {
+        stacked: true,
+        fields: [
+          text("empresa", texts.fieldCompany), text("fecha", texts.fieldDate), text("puesto", texts.fieldRole),
+          text("descripcion", texts.fieldDescription, { kind: "textarea" })
+        ],
+        newItem: function () { return { empresa: "", fecha: "", puesto: "", descripcion: "" }; }
+      });
+    },
+    formacion: function () {
+      addListSection(texts.formEducation, "formacion", {
+        stacked: true,
+        fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldCenter), text("fecha", texts.fieldDate)],
+        newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
+      });
+    },
+    cursos: function () {
+      addListSection(texts.formCourses, "cursos", {
+        stacked: true,
+        fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldCenter), text("fecha", texts.fieldDate)],
+        newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
+      });
+    },
+    proyectos: function () {
+      addListSection(texts.formProjects, "proyectos", {
+        stacked: true,
+        fields: [
+          text("nombre", texts.fieldProjectName), text("estado", texts.fieldStatus),
+          text("descripcion", texts.fieldDescription, { kind: "textarea" }),
+          text("etiquetas", texts.fieldTags, { help: texts.tagsHelp, format: formatTags, parse: parseTags })
+        ],
+        newItem: function () { return { nombre: "", estado: "", descripcion: "", etiquetas: [] }; }
+      });
+    }
+  };
+  orderMainSections(Object.keys(mainSections), data().orden).forEach(function (key) { mainSections[key](); });
+
+  // Methodology: a title and one row per step
+  var getMethod = function () {
+    var m = state.data.metodologia;
+    if (!m || typeof m !== "object") m = state.data.metodologia = { titulo: "", pasos: [] };
+    if (!Array.isArray(m.pasos)) m.pasos = [];
+    return m;
+  };
+  var method = addListSection(texts.formMethod, null, {
+    help: texts.methodHelp,
+    getList: function () { return getMethod().pasos; },
+    fields: [{ key: null, label: texts.fieldStep, kind: "text" }],
+    newItem: function () { return ""; },
+    addText: texts.stepAdd
+  });
+  method.body.insertBefore(buildTextField(doc, {
+    label: texts.fieldMethodTitle, value: getMethod().titulo,
+    onInput: function (value) { state.update(function () { getMethod().titulo = value; }); }
+  }), method.body.firstChild);
+}
+
+/**
+ * Keys of the main column in the order of the CV: first those in order,
+ * then the rest as they come.
+ */
+function orderMainSections(keys, order) {
+  var list = Array.isArray(order) ? order : [];
+  var pos = function (k) { var i = list.indexOf(k); return i < 0 ? list.length + keys.indexOf(k) : i; };
+  return keys.slice().sort(function (a, b) { return pos(a) - pos(b); });
 }
 
 if (typeof module !== "undefined") {
@@ -410,6 +561,11 @@ if (typeof module !== "undefined") {
     CONTACT_TYPES: CONTACT_TYPES,
     buildContactLink: buildContactLink,
     fitImageSize: fitImageSize,
-    updateContactLink: updateContactLink
+    updateContactLink: updateContactLink,
+    parseTags: parseTags,
+    formatTags: formatTags,
+    getRowValue: getRowValue,
+    setRowValue: setRowValue,
+    orderMainSections: orderMainSections
   };
 }

@@ -64,6 +64,41 @@ var TEXTS = {
     linkedin: "LinkedIn"
   },
 
+  // Form: languages, tools and other data (side column)
+  formLanguages: "Idiomas",
+  fieldLanguage: "Idioma",
+  fieldLevel: "Nivel",
+  formSkills: "Herramientas y habilidades",
+  skillsHelp: "Salen en la columna lateral, en «Herramientas».",
+  fieldGroup: "Grupo",
+  fieldItems: "Lista",
+  formOther: "Otros datos",
+  fieldOtherText: "Texto",
+  fieldOtherDetail: "Detalle",
+
+  // Form: main column
+  formExperience: "Experiencia",
+  fieldCompany: "Empresa",
+  fieldDate: "Fecha",
+  fieldRole: "Puesto",
+  fieldDescription: "Descripción",
+  formEducation: "Formación",
+  formCourses: "Cursos",
+  fieldTitle: "Título",
+  fieldCenter: "Centro",
+  formProjects: "Proyectos",
+  fieldProjectName: "Nombre",
+  fieldStatus: "Estado",
+  fieldTags: "Etiquetas",
+  tagsHelp: "Sepáralas con comas.",
+
+  // Form: methodology
+  formMethod: "Metodología",
+  fieldMethodTitle: "Título",
+  methodHelp: "Una fila por paso. Si no hay pasos, el recuadro no sale.",
+  fieldStep: "Paso",
+  stepAdd: "Añadir paso",
+
   // Titles printed on the CV sheet
   cvProfile: "Perfil",
   cvContact: "Contacto",

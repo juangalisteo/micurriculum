@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
 const TEXTS = require("../APP/js/texts.js");
 const { THEMES, LAYOUTS, DEFAULT_LOOK } = require("../APP/js/themes.js");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
-const { getInitials, joinSpanish, escapeHtml, safeLink, buildCvHtml } = require("../APP/js/render.js");
+const { getInitials, joinSpanish, cleanSteps, escapeHtml, safeLink, buildCvHtml } = require("../APP/js/render.js");
 
 const render = (data, look = DEFAULT_LOOK) => buildCvHtml(data, look, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
 const withData = (changes) => Object.assign(JSON.parse(JSON.stringify(SAMPLE_DATA)), changes);
@@ -80,4 +80,23 @@ test("sample data paints initials, theme colors on the sheet and the default lay
   assert.match(other, /^<div class="cv dcha" style="--lateral:#1F3A5F;/);
   const fallback = render(SAMPLE_DATA, { tema: "nope", formato: "nope" });
   assert.match(fallback, /^<div class="cv izq" style="--lateral:#22343D;/);
+});
+
+test("methodology: empty steps are dropped; with no steps the box is not shown", () => {
+  assert.deepEqual(cleanSteps([" Escuchar ", "", "   ", null, "Ordenar"]), ["Escuchar", "Ordenar"]);
+  assert.deepEqual(cleanSteps(undefined), []);
+  const withEmpty = render(withData({ metodologia: { titulo: "Mi forma", pasos: ["Leer", "", " "] } }));
+  assert.match(withEmpty, /<p class="frase">Leer\.<\/p>/);
+  for (const pasos of [[], ["", "  "], undefined]) {
+    assert.ok(!render(withData({ metodologia: { titulo: "Mi forma", pasos } })).includes('class="meto"'));
+  }
+  assert.ok(!render(withData({ metodologia: undefined })).includes('class="meto"'));
+});
+
+test("project tags are painted as chips", () => {
+  const html = render(withData({
+    orden: ["proyectos"],
+    proyectos: [{ nombre: "Web", estado: "En curso", descripcion: "Una tienda", etiquetas: ["HTML", "CSS"] }]
+  }));
+  assert.ok(html.includes('<div class="chips"><span>HTML</span><span>CSS</span></div>'));
 });

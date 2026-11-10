@@ -67,6 +67,11 @@ function joinSpanish(words) {
   return words.slice(0, -1).join(", ") + (/^h?i/i.test(last) ? " e " : " y ") + last;
 }
 
+/** Methodology steps without the empty ones (a new row not yet written). */
+function cleanSteps(steps) {
+  return asList(steps).map(function (s) { return String(s == null ? "" : s).trim(); }).filter(Boolean);
+}
+
 function cvIcon(type) {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
     (CV_ICONS[type] || CV_ICONS.otro) + "</svg>";
@@ -183,7 +188,7 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
     '<p class="pie">' + esc(texts.cvFooter) + "</p>" +
     "</aside>";
 
-  var steps = asList(d.metodologia && d.metodologia.pasos).filter(Boolean);
+  var steps = cleanSteps(d.metodologia && d.metodologia.pasos);
   var method = steps.length ? '<section class="meto">' + mono +
     '<p class="pluma">' + esc(d.metodologia.titulo) + "</p>" +
     '<p class="frase">' + esc(joinSpanish(steps.map(function (t, i) { return i ? String(t).toLowerCase() : String(t); }))) + ".</p>" +
@@ -214,6 +219,7 @@ if (typeof module !== "undefined") {
     safeLink: safeLink,
     getInitials: getInitials,
     joinSpanish: joinSpanish,
+    cleanSteps: cleanSteps,
     buildSection: buildSection,
     buildCvHtml: buildCvHtml,
     renderSheet: renderSheet
