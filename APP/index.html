@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  MiCurriculum · main page.
+
+  Project:   MiCurriculum
+  Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
+  License:   GPL-3.0-or-later (see LICENSE)
+  Copyright (C) 2026 Juan Bautista Galisteo Marqués.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiCurriculum</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name" data-text="appName"></span>
+      <span class="brand-version"><span data-text="versionLabel"></span> <span data-text="version"></span></span>
+    </div>
+    <div class="actions" id="actions"></div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel" id="form-panel" aria-labelledby="form-title">
+      <h2 class="panel-title" id="form-title" data-text="formTitle"></h2>
+      <p class="empty" data-text="formEmpty"></p>
+    </section>
+
+    <section class="preview" id="preview" aria-labelledby="preview-title">
+      <h2 class="visually-hidden" id="preview-title" data-text="previewTitle"></h2>
+      <div class="sheet" id="sheet">
+        <p class="empty" data-text="previewEmpty"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/texts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

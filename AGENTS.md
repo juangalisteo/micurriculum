@@ -19,6 +19,7 @@ Cada agente tiene además sus reglas propias, que no repiten estas:
 - Sin autorización expresa en la tarea, no se modifican código, arquitectura, configuración, pruebas ni dependencias, y no se hace commit, push, pull, merge, reset ni tags.
 - Si una tarea autoriza cambios, se mantienen dentro de lo pedido y se lista cada archivo modificado.
 - Antes de borrar o sustituir algo, se dice qué es y se espera la confirmación del propietario.
+- Los commits no llevan la línea `Co-Authored-By` ni ninguna otra atribución a la IA.
 
 ## 3. Nombres de carpetas y archivos
 
