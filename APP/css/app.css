@@ -46,6 +46,8 @@
 html, body { height: 100%; margin: 0; }
 
 body {
+  display: flex;
+  flex-direction: column;
   font-family: var(--ui-font);
   font-size: 14px;
   line-height: 1.5;
@@ -55,12 +57,14 @@ body {
 
 /* ---------- Top bar ---------- */
 .topbar {
-  height: var(--topbar-height);
+  flex: none;
+  min-height: var(--topbar-height);
   display: flex;
+  flex-wrap: wrap; /* in a narrow window the bar takes two lines */
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 0 20px;
+  gap: 8px 20px;
+  padding: 10px 20px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: inset 0 -3px 0 -2px var(--accent);
@@ -77,18 +81,59 @@ body {
   border-radius: 999px;
 }
 
-.actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.actions-help { margin-right: 4px; font-size: 12px; color: var(--muted); text-align: right; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0; margin-left: auto; }
+.actions-help { max-width: 240px; margin-right: 4px; font-size: 12px; line-height: 1.3; color: var(--muted); text-align: right; }
 .actions .button { white-space: nowrap; }
 .actions .button:focus-visible,
+.look-select:focus-visible,
+.theme-chip input:focus-visible + .theme-chip-body,
 .notice-close:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
+/* Look: theme and layout */
+.look { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.look-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.look-label { margin-right: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.theme-chip { position: relative; cursor: pointer; }
+.theme-chip-body {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.theme-chip:hover .theme-chip-body { background: var(--row); }
+.theme-chip input:checked + .theme-chip-body {
+  color: var(--accent-text);
+  background: var(--accent-surface);
+  border-color: var(--accent);
+}
+.theme-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(34, 52, 61, 0.25);
+}
+.look-select {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
 /* ---------- Work area ---------- */
 .workspace {
-  height: calc(100% - var(--topbar-height));
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: var(--panel-width) 1fr;
 }
@@ -237,6 +282,13 @@ body {
 .button-quiet { color: var(--text); background: var(--surface); border-color: var(--border); }
 .button-quiet:hover { background: var(--row); }
 .button:disabled { opacity: .45; cursor: default; background: var(--surface); }
+
+/* Order of the main column sections */
+.order-row { gap: 10px; }
+.order-name { flex: 1; font-weight: 500; }
+.order-show { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.order-show input { margin: 0; accent-color: var(--accent-text); }
+.order-show input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* Rows of a list (contact, experience, courses, steps…) */
 .rows-list { list-style: none; margin: 0 0 10px; padding: 0; }

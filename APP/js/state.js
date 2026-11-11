@@ -3,7 +3,8 @@
  *
  * The program starts with a copy of SAMPLE_DATA. The form changes the data
  * only through update(), and whoever listens (the sheet) is told after
- * every change. replace() puts in other data and look at once (a copy
+ * every change. updateLook() does the same with the look (theme and
+ * layout). replace() puts in other data and look at once (a copy
  * opened from a file, the data saved in the browser or the sample data).
  *
  * Project:   MiCurriculum
@@ -68,6 +69,10 @@ function createStore(initialData, initialLook) {
   }
   store.update = function (change) {
     if (typeof change === "function") change(store.data);
+    notify();
+  };
+  store.updateLook = function (change) {
+    if (typeof change === "function") change(store.look);
     notify();
   };
   store.replace = function (data, look) {

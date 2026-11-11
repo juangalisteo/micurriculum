@@ -35,6 +35,26 @@ var TEXTS = {
   copyReadError: "No se ha podido leer el archivo. No se ha cambiado nada.",
   storageBlocked: "El navegador no deja guardar los datos en esta página: al cerrarla se pierden. El programa funciona igual; usa «Guardar copia» para no perderlos.",
 
+  // Look: theme and layout, in the top bar
+  lookTheme: "Tema",
+  lookLayout: "Formato",
+  themeNames: {
+    marca: "Marca",
+    oceano: "Océano",
+    bosque: "Bosque",
+    claro: "Claro"
+  },
+  layoutNames: {
+    izq: "Columna a la izquierda",
+    dcha: "Columna a la derecha",
+    una: "Una columna"
+  },
+
+  // Form: order of the main column sections
+  formOrder: "Orden de los apartados",
+  orderHelp: "La metodología va siempre al final y sale si tiene pasos.",
+  orderShow: "Sale en la hoja",
+
   // Form: personal data
   formPersonal: "Datos personales",
   fieldName: "Nombre",

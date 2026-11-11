@@ -3,12 +3,14 @@
  *
  * One folding section (<details>) per block of the CV, in the order it is
  * printed: personal data, profile, contact, languages, tools, other data,
- * the main column sections and the methodology. Every change goes through
+ * the order of the main column, its sections (in that order) and the
+ * methodology. Every change goes through
  * STATE.update(), so the sheet is painted again at once. createListEditor()
  * is the reusable piece for every list of rows.
  *
  * buildContactLink(), fitImageSize(), the tag and row helpers and
- * orderMainSections() do not need the browser and are tested in Node.
+ * buildOrderRows() and orderFromRows() do not need the browser and are
+ * tested in Node.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -486,10 +488,71 @@ function buildForm(doc, state, texts) {
     newItem: function () { return { texto: "", detalle: "" }; }
   });
 
-  // Main column: the sections follow the order of the CV (data.orden)
+  // Order of the main column: every section, shown or hidden, in its place
+  var orderRows = buildOrderRows(data().orden, MAIN_SECTIONS);
+  var orderSection = buildFormSection(doc, texts.formOrder, false);
+  orderSection.body.appendChild(el(doc, "p", { class: "help section-help" }, texts.orderHelp));
+  var orderList = el(doc, "ol", { class: "rows-list order-list" });
+  orderSection.body.appendChild(orderList);
+  host.appendChild(orderSection.element);
+
+  var sectionTitle = function (key) { return texts[MAIN_SECTION_TITLES[key]] || key; };
+
+  /** Saves the order, paints the rows again, moves the form sections and puts the focus back. */
+  function changeOrder(change, focusKey, focusAction) {
+    state.update(function (d) {
+      change();
+      d.orden = orderFromRows(orderRows);
+    });
+    refreshOrder();
+    placeMainSections();
+    var row = orderList.querySelector('[data-key="' + focusKey + '"]');
+    if (!row) return;
+    var target = row.querySelector('[data-action="' + focusAction + '"]');
+    if (!target || target.disabled) target = row.querySelector("button:not([disabled])") || row.querySelector("input");
+    if (target) target.focus();
+  }
+
+  function refreshOrder() {
+    orderList.textContent = "";
+    orderRows.forEach(function (item, index) {
+      var name = sectionTitle(item.key);
+      var li = el(doc, "li", { class: "row order-row", "data-key": item.key });
+      li.appendChild(el(doc, "span", { class: "order-name" }, name));
+      var id = newFieldId("order");
+      var check = el(doc, "label", { class: "order-show", for: id });
+      var box = el(doc, "input", { type: "checkbox", id: id, "data-action": "show" });
+      box.checked = item.shown;
+      box.addEventListener("change", function () {
+        var shown = box.checked;
+        changeOrder(function () { item.shown = shown; }, item.key, "show");
+      });
+      check.appendChild(box);
+      check.appendChild(doc.createTextNode(" " + texts.orderShow));
+      check.appendChild(el(doc, "span", { class: "visually-hidden" }, " (" + name + ")"));
+      li.appendChild(check);
+      var buttons = el(doc, "div", { class: "row-buttons" });
+      [["up", texts.rowUp, "↑", index === 0], ["down", texts.rowDown, "↓", index === orderRows.length - 1]].forEach(function (b) {
+        var button = el(doc, "button", {
+          type: "button", class: "icon-button", "data-action": b[0],
+          "aria-label": b[1] + " (" + name + ")", title: b[1], disabled: b[3] ? "" : null
+        }, b[2]);
+        button.addEventListener("click", function () {
+          changeOrder(function () { moveRow(orderRows, index, b[0] === "up" ? -1 : 1); }, item.key, b[0]);
+        });
+        buttons.appendChild(button);
+      });
+      li.appendChild(buttons);
+      orderList.appendChild(li);
+    });
+  }
+  refreshOrder();
+
+  // Main column: the form sections follow the same order, hidden ones included
+  var mainElements = {};
   var mainSections = {
     experiencia: function () {
-      addListSection(texts.formExperience, "experiencia", {
+      return addListSection(texts.formExperience, "experiencia", {
         stacked: true,
         fields: [
           text("empresa", texts.fieldCompany), text("fecha", texts.fieldDate), text("puesto", texts.fieldRole),
@@ -499,14 +562,14 @@ function buildForm(doc, state, texts) {
       });
     },
     formacion: function () {
-      addListSection(texts.formEducation, "formacion", {
+      return addListSection(texts.formEducation, "formacion", {
         stacked: true,
         fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldCenter), text("fecha", texts.fieldDate)],
         newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
       });
     },
     cursos: function () {
-      addListSection(texts.formCourses, "cursos", {
+      return addListSection(texts.formCourses, "cursos", {
         stacked: true,
         // The second field is also used for a line of explanation; inside, it is still "centro"
         fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldSubtitle), text("fecha", texts.fieldDate)],
@@ -515,7 +578,7 @@ function buildForm(doc, state, texts) {
     }
   };
   // "proyectos" has no section in the first version: data that brings it is kept but not shown here
-  orderMainSections(Object.keys(mainSections), data().orden).forEach(function (key) { mainSections[key](); });
+  orderRows.forEach(function (item) { mainElements[item.key] = mainSections[item.key]().element; });
 
   // Methodology: a title and one row per step
   var getMethod = function () {
@@ -535,16 +598,34 @@ function buildForm(doc, state, texts) {
     label: texts.fieldMethodTitle, value: getMethod().titulo,
     onInput: function (value) { state.update(function () { getMethod().titulo = value; }); }
   }), method.body.firstChild);
+
+  /** Puts the main column sections of the form in the chosen order, before the methodology. */
+  function placeMainSections() {
+    orderRows.forEach(function (item) { host.insertBefore(mainElements[item.key], method.element); });
+  }
 }
 
+/* Form title of each main column section, as a key of TEXTS. */
+var MAIN_SECTION_TITLES = { formacion: "formEducation", experiencia: "formExperience", cursos: "formCourses" };
+
 /**
- * Keys of the main column in the order of the CV: first those in order,
- * then the rest as they come.
+ * Rows of the "Orden de los apartados" editor: first the sections in
+ * order (shown), then the other known ones (hidden), each once.
+ * keys: the sections that can be edited (MAIN_SECTIONS).
  */
-function orderMainSections(keys, order) {
-  var list = Array.isArray(order) ? order : [];
-  var pos = function (k) { var i = list.indexOf(k); return i < 0 ? list.length + keys.indexOf(k) : i; };
-  return keys.slice().sort(function (a, b) { return pos(a) - pos(b); });
+function buildOrderRows(order, keys) {
+  var rows = [];
+  var has = function (k) { return rows.some(function (r) { return r.key === k; }); };
+  (Array.isArray(order) ? order : []).forEach(function (k) {
+    if (keys.indexOf(k) >= 0 && !has(k)) rows.push({ key: k, shown: true });
+  });
+  keys.forEach(function (k) { if (!has(k)) rows.push({ key: k, shown: false }); });
+  return rows;
+}
+
+/** The order saved in the data: the keys of the rows that are shown, as they are placed. */
+function orderFromRows(rows) {
+  return rows.filter(function (r) { return r.shown; }).map(function (r) { return r.key; });
 }
 
 if (typeof module !== "undefined") {
@@ -557,6 +638,7 @@ if (typeof module !== "undefined") {
     formatTags: formatTags,
     getRowValue: getRowValue,
     setRowValue: setRowValue,
-    orderMainSections: orderMainSections
+    buildOrderRows: buildOrderRows,
+    orderFromRows: orderFromRows
   };
 }

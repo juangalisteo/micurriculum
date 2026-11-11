@@ -157,7 +157,7 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
   var esc = escapeHtml;
   var d = data || {};
   var l = look || {};
-  var theme = themes[l.tema] || themes[defaultLook.tema];
+  var theme = themes[Object.prototype.hasOwnProperty.call(themes, l.tema) ? l.tema : defaultLook.tema];
   var layout = layouts.indexOf(l.formato) >= 0 ? l.formato : defaultLook.formato;
   var font = l.letra || defaultLook.letra;
   var initials = esc(getInitials(d.nombre));

@@ -29,7 +29,9 @@
 .cv.izq { grid-template-columns: 72mm 1fr; }
 .cv.dcha { grid-template-columns: 1fr 72mm; }
 .cv.dcha .lado { order: 2; }
-.cv.una { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+/* minmax(0, 1fr): when the main column does not fit, it is cut at the bottom (and the
+   warning shows) instead of squashing the top band. When it fits, it is the same as 1fr. */
+.cv.una { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
 
 /* ---------- Side column ---------- */
 .cv .lado { background: var(--lateral); color: var(--lateral-texto); padding: 13mm 9mm 10mm; display: flex; flex-direction: column; gap: 5.2mm; position: relative; overflow: hidden; isolation: isolate; }

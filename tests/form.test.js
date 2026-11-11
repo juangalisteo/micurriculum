@@ -18,7 +18,7 @@ const SAMPLE_DATA = require("../APP/js/sample-data.js");
 const { DEFAULT_LOOK } = require("../APP/js/themes.js");
 const {
   CONTACT_TYPES, buildContactLink, fitImageSize, updateContactLink,
-  parseTags, formatTags, getRowValue, setRowValue, orderMainSections
+  parseTags, formatTags, getRowValue, setRowValue, buildOrderRows, orderFromRows
 } = require("../APP/js/form.js");
 const { addRow, removeRow, moveRow, createStore } = require("../APP/js/state.js");
 
@@ -139,11 +139,51 @@ test("methodology steps: each row is only a text", () => {
   assert.deepEqual(steps, ["Escuchar", "Ilusionar", "Diseñar"]);
 });
 
-test("form sections of the main column follow the order of the CV", () => {
-  const keys = ["experiencia", "formacion", "cursos", "proyectos"];
-  assert.deepEqual(orderMainSections(keys, ["formacion", "experiencia", "cursos"]), ["formacion", "experiencia", "cursos", "proyectos"]);
-  assert.deepEqual(orderMainSections(keys, ["cursos", "nada"]), ["cursos", "experiencia", "formacion", "proyectos"]);
-  assert.deepEqual(orderMainSections(keys, undefined), keys);
+test("order rows: the sections in order are shown, the rest hidden at the end", () => {
+  const keys = ["formacion", "experiencia", "cursos"];
+  assert.deepEqual(buildOrderRows(["formacion", "experiencia", "cursos"], keys), [
+    { key: "formacion", shown: true }, { key: "experiencia", shown: true }, { key: "cursos", shown: true }
+  ]);
+  assert.deepEqual(buildOrderRows(["cursos", "nada", "proyectos", "cursos"], keys), [
+    { key: "cursos", shown: true }, { key: "formacion", shown: false }, { key: "experiencia", shown: false }
+  ]);
+  assert.deepEqual(orderFromRows(buildOrderRows([], keys)), []);
+  assert.deepEqual(orderFromRows(buildOrderRows(undefined, keys)), []);
+});
+
+test("order: moving a section up and down", () => {
+  const rows = buildOrderRows(["formacion", "experiencia", "cursos"], ["formacion", "experiencia", "cursos"]);
+  assert.equal(moveRow(rows, 2, -1), 1);
+  assert.deepEqual(orderFromRows(rows), ["formacion", "cursos", "experiencia"]);
+  assert.equal(moveRow(rows, 0, 1), 1);
+  assert.deepEqual(orderFromRows(rows), ["cursos", "formacion", "experiencia"]);
+  assert.equal(moveRow(rows, 0, -1), -1); // already first
+  assert.equal(moveRow(rows, 2, 1), -1); // already last
+  assert.deepEqual(orderFromRows(rows), ["cursos", "formacion", "experiencia"]);
+});
+
+test("order: hiding a section and showing it again keeps its place", () => {
+  const keys = ["formacion", "experiencia", "cursos"];
+  const rows = buildOrderRows(keys, keys);
+  rows[1].shown = false;
+  assert.deepEqual(orderFromRows(rows), ["formacion", "cursos"]);
+  moveRow(rows, 2, -1); // cursos goes above the hidden experiencia
+  assert.deepEqual(orderFromRows(rows), ["formacion", "cursos"]);
+  rows[2].shown = true;
+  assert.deepEqual(orderFromRows(rows), ["formacion", "cursos", "experiencia"]);
+  // After saving and loading, a hidden section comes back at the end, still hidden
+  assert.deepEqual(buildOrderRows(["cursos"], keys), [
+    { key: "cursos", shown: true }, { key: "formacion", shown: false }, { key: "experiencia", shown: false }
+  ]);
+});
+
+test("order: the store saves it, so the sheet and the copies get it", () => {
+  const store = createStore({ orden: ["formacion", "experiencia", "cursos"] }, {});
+  const rows = buildOrderRows(store.data.orden, ["formacion", "experiencia", "cursos"]);
+  let seen = null;
+  store.onChange((data) => { seen = data.orden.slice(); });
+  store.update((d) => { rows[0].shown = false; d.orden = orderFromRows(rows); });
+  assert.deepEqual(seen, ["experiencia", "cursos"]);
 });
 
 test("every new text of the form exists", () => {
@@ -152,7 +192,7 @@ test("every new text of the form exists", () => {
     "formOther", "fieldOtherText", "fieldOtherDetail", "formExperience", "fieldCompany", "fieldDate", "fieldRole",
     "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "fieldSubtitle",
     "formMethod", "fieldMethodTitle", "methodHelp",
-    "fieldStep", "stepAdd"
+    "fieldStep", "stepAdd", "formOrder", "orderHelp", "orderShow"
   ];
   for (const key of keys) assert.equal(typeof TEXTS[key], "string", key);
 });
