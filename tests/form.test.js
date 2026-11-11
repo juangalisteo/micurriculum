@@ -150,8 +150,8 @@ test("every new text of the form exists", () => {
   const keys = [
     "formLanguages", "fieldLanguage", "fieldLevel", "formSkills", "skillsHelp", "fieldGroup", "fieldItems",
     "formOther", "fieldOtherText", "fieldOtherDetail", "formExperience", "fieldCompany", "fieldDate", "fieldRole",
-    "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "formProjects",
-    "fieldProjectName", "fieldStatus", "fieldTags", "tagsHelp", "formMethod", "fieldMethodTitle", "methodHelp",
+    "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "fieldSubtitle",
+    "formMethod", "fieldMethodTitle", "methodHelp",
     "fieldStep", "stepAdd"
   ];
   for (const key of keys) assert.equal(typeof TEXTS[key], "string", key);

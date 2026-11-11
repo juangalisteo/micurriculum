@@ -78,7 +78,7 @@ function updateContactLink(row) {
   else delete row.enlace;
 }
 
-/** "a, b,, c " → ["a", "b", "c"]: the project tags typed in one field. */
+/** "a, b,, c " → ["a", "b", "c"]: tags typed in one field (projects, not in the form yet). */
 function parseTags(text) {
   return String(text == null ? "" : text).split(",").map(function (t) { return t.trim(); }).filter(Boolean);
 }
@@ -508,22 +508,13 @@ function buildForm(doc, state, texts) {
     cursos: function () {
       addListSection(texts.formCourses, "cursos", {
         stacked: true,
-        fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldCenter), text("fecha", texts.fieldDate)],
+        // The second field is also used for a line of explanation; inside, it is still "centro"
+        fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldSubtitle), text("fecha", texts.fieldDate)],
         newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
-      });
-    },
-    proyectos: function () {
-      addListSection(texts.formProjects, "proyectos", {
-        stacked: true,
-        fields: [
-          text("nombre", texts.fieldProjectName), text("estado", texts.fieldStatus),
-          text("descripcion", texts.fieldDescription, { kind: "textarea" }),
-          text("etiquetas", texts.fieldTags, { help: texts.tagsHelp, format: formatTags, parse: parseTags })
-        ],
-        newItem: function () { return { nombre: "", estado: "", descripcion: "", etiquetas: [] }; }
       });
     }
   };
+  // "proyectos" has no section in the first version: data that brings it is kept but not shown here
   orderMainSections(Object.keys(mainSections), data().orden).forEach(function (key) { mainSections[key](); });
 
   // Methodology: a title and one row per step

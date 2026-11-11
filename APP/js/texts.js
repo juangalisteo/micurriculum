@@ -20,6 +20,7 @@ var TEXTS = {
   pageTitle: "MiCurriculum · Haz tu currículum",
   formTitle: "Tus datos",
   previewTitle: "Vista previa",
+  sheetOverflow: "El contenido no cabe en una página",
 
   // Form: personal data
   formPersonal: "Datos personales",
@@ -86,11 +87,7 @@ var TEXTS = {
   formCourses: "Cursos",
   fieldTitle: "Título",
   fieldCenter: "Centro",
-  formProjects: "Proyectos",
-  fieldProjectName: "Nombre",
-  fieldStatus: "Estado",
-  fieldTags: "Etiquetas",
-  tagsHelp: "Sepáralas con comas.",
+  fieldSubtitle: "Subtítulo",
 
   // Form: methodology
   formMethod: "Metodología",

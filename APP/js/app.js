@@ -1,6 +1,7 @@
 /*
  * MiCurriculum · start-up: puts the texts and the version on the screen,
- * builds the form and paints the CV again after every change.
+ * builds the form, paints the CV again after every change, fits the sheet
+ * to the screen and warns when the CV does not fit on one page.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -32,8 +33,13 @@ if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", function () {
     applyTexts(document, TEXTS);
     buildForm(document, STATE, TEXTS);
-    STATE.onChange(function (data, look) { renderSheet(document, data, look); });
+    STATE.onChange(function (data, look) {
+      renderSheet(document, data, look);
+      checkOverflow(document);
+    });
     renderSheet(document, STATE.data, STATE.look);
+    watchSheetFit(document);
+    checkOverflow(document);
   });
 }
 

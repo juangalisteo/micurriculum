@@ -32,7 +32,11 @@
   --grid-line: #EDF0F1;
 
   --topbar-height: 56px;
-  --panel-width: 400px;
+  --panel-width: 460px;
+
+  --warning-text: #8A3B12;
+  --warning-surface: #FCE9DD;
+  --warning-border: #EDB596;
 }
 
 *,
@@ -97,19 +101,37 @@ body {
 
 .preview {
   overflow: auto;
+  scrollbar-gutter: stable; /* the width does not change when the vertical bar appears */
   padding: 32px;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   background:
     linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px,
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 24px 24px,
     var(--background);
 }
 
-/* A4 sheet: 210 × 297 mm. The edge is an outline, so the CV keeps its exact size. */
-.sheet {
+/* Warning above the sheet when the CV does not fit on one page. */
+.sheet-warning {
   flex: none;
+  margin: 0 0 12px;
+  padding: 8px 14px;
+  font-weight: 500;
+  color: var(--warning-text);
+  background: var(--warning-surface);
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+}
+.sheet-warning[hidden] { display: none; }
+
+/* The frame takes the size of the sheet once scaled (fit.js), so the area scrolls right. */
+.sheet-frame { flex: none; }
+
+/* A4 sheet: 210 × 297 mm. The edge is an outline, so the CV keeps its exact size.
+   On screen fit.js scales it with a transform; the size in mm does not change. */
+.sheet {
+  transform-origin: top left;
   width: 210mm;
   height: 297mm;
   overflow: hidden;
