@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
 const TEXTS = require("../APP/js/texts.js");
 const { THEMES, LAYOUTS, DEFAULT_LOOK } = require("../APP/js/themes.js");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
-const { getInitials, joinSpanish, cleanSteps, escapeHtml, safeLink, buildCvHtml } = require("../APP/js/render.js");
+const { getInitials, joinSpanish, cleanSteps, escapeHtml, safeLink, buildSection, buildCvHtml } = require("../APP/js/render.js");
 
 const render = (data, look = DEFAULT_LOOK) => buildCvHtml(data, look, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
 const withData = (changes) => Object.assign(JSON.parse(JSON.stringify(SAMPLE_DATA)), changes);
@@ -93,10 +93,13 @@ test("methodology: empty steps are dropped; with no steps the box is not shown",
   assert.ok(!render(withData({ metodologia: undefined })).includes('class="meto"'));
 });
 
-test("project tags are painted as chips", () => {
-  const html = render(withData({
-    orden: ["proyectos"],
-    proyectos: [{ nombre: "Web", estado: "En curso", descripcion: "Una tienda", etiquetas: ["HTML", "CSS"] }]
-  }));
-  assert.ok(html.includes('<div class="chips"><span>HTML</span><span>CSS</span></div>'));
+test("sections that cannot be edited are not painted, even when they are in the order", () => {
+  const proyectos = [{ nombre: "Web", estado: "En curso", descripcion: "Una tienda", etiquetas: ["HTML", "CSS"] }];
+  const html = render(withData({ orden: ["proyectos", "habilidades", "cursos"], proyectos }));
+  assert.ok(!html.includes(`<h2>${TEXTS.cvProjects}</h2>`));
+  assert.ok(!html.includes(`<h2>${TEXTS.cvSkills}</h2>`));
+  assert.ok(html.includes(`<h2>${TEXTS.cvCourses}</h2>`));
+  // render.js keeps the code of the projects, with their tags as chips
+  const section = buildSection("proyectos", { proyectos }, TEXTS);
+  assert.ok(section.includes('<div class="chips"><span>HTML</span><span>CSS</span></div>'));
 });

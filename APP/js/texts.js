@@ -21,6 +21,19 @@ var TEXTS = {
   formTitle: "Tus datos",
   previewTitle: "Vista previa",
   sheetOverflow: "El contenido no cabe en una página",
+  noticeClose: "Cerrar aviso",
+
+  // Saving: buttons of the top bar and their messages
+  copySave: "Guardar copia",
+  copyOpen: "Abrir copia",
+  sampleReset: "Volver al ejemplo",
+  copiesHelp: "Las copias se guardan en Descargas; muévelas a la carpeta MY_CV.",
+  copyOpenConfirm: "Los datos que tienes ahora se van a sustituir por los de la copia. ¿Seguir?",
+  sampleResetConfirm: "Los datos que tienes ahora se van a sustituir por los de ejemplo. Si los quieres conservar, antes pulsa «Guardar copia». ¿Seguir?",
+  copyInvalid: "Ese archivo no es una copia de MiCurriculum. No se ha cambiado nada.",
+  copyNewer: "Esa copia es de una versión más nueva de MiCurriculum y esta no la sabe abrir. No se ha cambiado nada.",
+  copyReadError: "No se ha podido leer el archivo. No se ha cambiado nada.",
+  storageBlocked: "El navegador no deja guardar los datos en esta página: al cerrarla se pierden. El programa funciona igual; usa «Guardar copia» para no perderlos.",
 
   // Form: personal data
   formPersonal: "Datos personales",

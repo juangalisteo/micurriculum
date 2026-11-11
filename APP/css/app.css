@@ -77,7 +77,14 @@ body {
   border-radius: 999px;
 }
 
-.actions { display: flex; align-items: center; gap: 8px; }
+.actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.actions-help { margin-right: 4px; font-size: 12px; color: var(--muted); text-align: right; }
+.actions .button { white-space: nowrap; }
+.actions .button:focus-visible,
+.notice-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 
 /* ---------- Work area ---------- */
 .workspace {
@@ -124,6 +131,24 @@ body {
   border-radius: 6px;
 }
 .sheet-warning[hidden] { display: none; }
+
+/* Message above the sheet: a copy that cannot be opened, or saving not allowed. */
+.notice {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 210mm;
+  margin: 0 0 12px;
+  padding: 8px 8px 8px 14px;
+  color: var(--warning-text);
+  background: var(--warning-surface);
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+}
+.notice[hidden] { display: none; }
+.notice-text { flex: 1; margin: 3px 0; }
+.notice .notice-close { flex: none; color: var(--warning-text); }
 
 /* The frame takes the size of the sheet once scaled (fit.js), so the area scrolls right. */
 .sheet-frame { flex: none; }

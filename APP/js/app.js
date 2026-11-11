@@ -1,7 +1,9 @@
 /*
  * MiCurriculum · start-up: puts the texts and the version on the screen,
- * builds the form, paints the CV again after every change, fits the sheet
- * to the screen and warns when the CV does not fit on one page.
+ * loads the data saved in the browser (or the sample data), builds the
+ * form and the copy buttons, paints the CV again and saves it after every
+ * change, fits the sheet to the screen and warns when the CV does not fit
+ * on one page.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -32,10 +34,27 @@ function applyTexts(doc, texts) {
 if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", function () {
     applyTexts(document, TEXTS);
+    var closeNotice = document.getElementById("notice-close");
+    closeNotice.setAttribute("aria-label", TEXTS.noticeClose);
+    closeNotice.title = TEXTS.noticeClose;
+    closeNotice.addEventListener("click", function () { hideNotice(document); });
+
+    var storage = getBrowserStorage(window);
+    var saver = createSaver(storage || {}, function () { showNotice(document, TEXTS.storageBlocked); });
+    if (saver.check()) {
+      var saved = saver.load();
+      if (saved) STATE.replace(saved.data, saved.look);
+    }
+
     buildForm(document, STATE, TEXTS);
+    buildCopyActions(document, window, STATE, TEXTS, { data: SAMPLE_DATA, look: DEFAULT_LOOK }, function (data, look) {
+      STATE.replace(data, look);
+      buildForm(document, STATE, TEXTS);
+    });
     STATE.onChange(function (data, look) {
       renderSheet(document, data, look);
       checkOverflow(document);
+      saver.save(data, look);
     });
     renderSheet(document, STATE.data, STATE.look);
     watchSheetFit(document);

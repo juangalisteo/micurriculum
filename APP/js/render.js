@@ -20,6 +20,13 @@ if (typeof module !== "undefined" && typeof cleanSvg === "undefined") {
   var cleanSvg = require("./svg-clean.js").cleanSvg;
 }
 
+/*
+ * Sections of the main column that can be edited in the form, in their
+ * default order. The sheet paints only these, even when the order of a
+ * copy brings others (for example "proyectos").
+ */
+var MAIN_SECTIONS = ["formacion", "experiencia", "cursos"];
+
 var CV_ICONS = {
   telefono: '<path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
   correo: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M3 7l9 6 9-6"/>',
@@ -194,7 +201,9 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
     '<p class="frase">' + esc(joinSpanish(steps.map(function (t, i) { return i ? String(t).toLowerCase() : String(t); }))) + ".</p>" +
     "</section>" : "";
 
-  var main = '<main class="main">' + asList(d.orden).map(function (key) { return buildSection(key, d, texts); }).join("") + method + "</main>";
+  var main = '<main class="main">' + asList(d.orden).filter(function (key) {
+    return MAIN_SECTIONS.indexOf(key) >= 0;
+  }).map(function (key) { return buildSection(key, d, texts); }).join("") + method + "</main>";
 
   return '<div class="cv ' + layout + '" style="' + esc(buildThemeStyle(theme, font)) + '">' + side + main + "</div>";
 }
@@ -215,6 +224,7 @@ function renderSheet(doc, data, look) {
 
 if (typeof module !== "undefined") {
   module.exports = {
+    MAIN_SECTIONS: MAIN_SECTIONS,
     escapeHtml: escapeHtml,
     safeLink: safeLink,
     getInitials: getInitials,

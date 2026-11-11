@@ -3,7 +3,8 @@
  *
  * The program starts with a copy of SAMPLE_DATA. The form changes the data
  * only through update(), and whoever listens (the sheet) is told after
- * every change. Saving in the browser comes in a later batch.
+ * every change. replace() puts in other data and look at once (a copy
+ * opened from a file, the data saved in the browser or the sample data).
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -62,9 +63,17 @@ function createStore(initialData, initialLook) {
   store.onChange = function (listener) {
     store.listeners.push(listener);
   };
+  function notify() {
+    for (var i = 0; i < store.listeners.length; i++) store.listeners[i](store.data, store.look);
+  }
   store.update = function (change) {
     if (typeof change === "function") change(store.data);
-    for (var i = 0; i < store.listeners.length; i++) store.listeners[i](store.data, store.look);
+    notify();
+  };
+  store.replace = function (data, look) {
+    store.data = cloneData(data);
+    store.look = cloneData(look);
+    notify();
   };
   return store;
 }
