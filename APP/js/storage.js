@@ -192,12 +192,17 @@ function nameForFile(name) {
   return text.replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "SIN_NOMBRE";
 }
 
-/** CV_NOMBRE_AAAAMMDD.json, with the local date of the given day. */
-function copyFileName(name, date) {
+/** CV_NOMBRE_AAAAMMDD, with the local date of the given day (copies and PDF share it). */
+function cvBaseName(name, date) {
   var day = date || new Date();
   var pad = function (n) { return (n < 10 ? "0" : "") + n; };
   var stamp = day.getFullYear() + pad(day.getMonth() + 1) + pad(day.getDate());
-  return "CV_" + nameForFile(name) + "_" + stamp + ".json";
+  return "CV_" + nameForFile(name) + "_" + stamp;
+}
+
+/** CV_NOMBRE_AAAAMMDD.json */
+function copyFileName(name, date) {
+  return cvBaseName(name, date) + ".json";
 }
 
 /* ---------- Saving in the browser ---------- */
@@ -289,8 +294,8 @@ function downloadCopy(doc, win, data, look) {
 }
 
 /**
- * Puts the buttons "Guardar copia", "Abrir copia" and "Volver al ejemplo"
- * in #actions. replace(data, look) puts new data in the program.
+ * Puts the buttons "Guardar copia", "Abrir CV.json" and "Volver al ejemplo"
+ * (an icon) in #actions. replace(data, look) puts new data in the program.
  */
 function buildCopyActions(doc, win, state, texts, sample, replace) {
   var host = doc.getElementById("actions");
@@ -339,7 +344,10 @@ function buildCopyActions(doc, win, state, texts, sample, replace) {
     reader.readAsText(file);
   });
 
-  var reset = button(texts.sampleReset, true);
+  var reset = button(texts.sampleResetIcon, true);
+  reset.className += " button-icon";
+  reset.title = texts.sampleReset;
+  reset.setAttribute("aria-label", texts.sampleReset);
   reset.addEventListener("click", function () {
     if (!win.confirm(texts.sampleResetConfirm)) return;
     hideNotice(doc);
@@ -371,6 +379,7 @@ if (typeof module !== "undefined") {
     serializeCopy: serializeCopy,
     parseCopy: parseCopy,
     nameForFile: nameForFile,
+    cvBaseName: cvBaseName,
     copyFileName: copyFileName,
     createSaver: createSaver
   };

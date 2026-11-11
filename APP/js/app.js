@@ -1,8 +1,8 @@
 /*
  * MiCurriculum · start-up: puts the texts and the version on the screen,
  * loads the data saved in the browser (or the sample data), builds the
- * form, the theme and layout controls and the copy buttons, paints the CV again and saves it after every
- * change, fits the sheet to the screen and warns when the CV does not fit
+ * form, the theme and layout controls, the copy buttons and the PDF
+ * button, paints the CV again and saves it after every change, fits the sheet to the screen and warns when the CV does not fit
  * on one page.
  *
  * Project:   MiCurriculum
@@ -53,6 +53,7 @@ if (typeof document !== "undefined") {
       buildForm(document, STATE, TEXTS);
       buildLookControls(document, STATE, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
     });
+    buildExportAction(document, window, STATE, TEXTS);
     STATE.onChange(function (data, look) {
       renderSheet(document, data, look);
       checkOverflow(document);

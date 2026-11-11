@@ -25,8 +25,9 @@ var TEXTS = {
 
   // Saving: buttons of the top bar and their messages
   copySave: "Guardar copia",
-  copyOpen: "Abrir copia",
-  sampleReset: "Volver al ejemplo",
+  copyOpen: "Abrir CV.json",
+  sampleReset: "Volver al ejemplo (se borran tus datos)",
+  sampleResetIcon: "↻",
   copiesHelp: "Las copias se guardan en Descargas; muévelas a la carpeta MY_CV.",
   copyOpenConfirm: "Los datos que tienes ahora se van a sustituir por los de la copia. ¿Seguir?",
   sampleResetConfirm: "Los datos que tienes ahora se van a sustituir por los de ejemplo. Si los quieres conservar, antes pulsa «Guardar copia». ¿Seguir?",
@@ -34,6 +35,11 @@ var TEXTS = {
   copyNewer: "Esa copia es de una versión más nueva de MiCurriculum y esta no la sabe abrir. No se ha cambiado nada.",
   copyReadError: "No se ha podido leer el archivo. No se ha cambiado nada.",
   storageBlocked: "El navegador no deja guardar los datos en esta página: al cerrarla se pierden. El programa funciona igual; usa «Guardar copia» para no perderlos.",
+
+  // Export to PDF: button of the top bar and its messages
+  pdfExport: "Exportar PDF",
+  pdfExportHelp: "En la ventana de imprimir, elige Guardar como PDF",
+  pdfOverflowConfirm: "El contenido no cabe en una página y se cortará. ¿Exportar igualmente?",
 
   // Look: theme and layout, in the top bar
   lookTheme: "Tema",

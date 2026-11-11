@@ -281,6 +281,8 @@ body {
 .button:hover { background: var(--gradient-strong); }
 .button-quiet { color: var(--text); background: var(--surface); border-color: var(--border); }
 .button-quiet:hover { background: var(--row); }
+/* A button with only an icon (↻); its text is in title and aria-label. */
+.button-icon { padding: 5px 9px; font-size: 15px; line-height: 1.4; }
 .button:disabled { opacity: .45; cursor: default; background: var(--surface); }
 
 /* Order of the main column sections */
@@ -335,4 +337,24 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ---------- Print: only the CV sheet, A4 at real size (Exportar PDF) ---------- */
+@page { size: A4 portrait; margin: 0; }
+
+@media print {
+  html, body { height: auto; background: #fff; }
+  body { display: block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .topbar, .panel, .notice, .sheet-warning, #preview-title { display: none !important; }
+  .workspace { display: block; }
+  .preview { display: block; padding: 0; overflow: visible; background: none; }
+  /* fit.js sets the size of the frame and the scale of the sheet for the screen. */
+  .sheet-frame { width: auto !important; height: auto !important; }
+  .sheet {
+    transform: none !important;
+    outline: none;
+    box-shadow: none;
+    break-after: avoid;
+    break-inside: avoid;
+  }
 }
