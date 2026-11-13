@@ -22,7 +22,7 @@ const { pickTheme, pickLayout, themeSwatch } = require("../APP/js/look.js");
 const render = (look) => buildCvHtml(SAMPLE_DATA, look, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
 
 test("every theme and layout has its name in texts.js", () => {
-  assert.deepEqual(Object.keys(THEMES), ["marca", "oceano", "bosque", "claro"]);
+  assert.deepEqual(Object.keys(THEMES), ["marca", "oceano", "burdeos", "claro"]);
   assert.deepEqual(LAYOUTS, ["izq", "dcha", "una"]);
   for (const key of Object.keys(THEMES)) assert.equal(typeof TEXTS.themeNames[key], "string", key);
   for (const key of LAYOUTS) assert.equal(typeof TEXTS.layoutNames[key], "string", key);
@@ -36,7 +36,7 @@ test("unknown theme or layout: the default one is used", () => {
   assert.equal(pickTheme("nope", THEMES, DEFAULT_LOOK), "marca");
   assert.equal(pickTheme(undefined, THEMES, DEFAULT_LOOK), "marca");
   assert.equal(pickTheme("toString", THEMES, DEFAULT_LOOK), "marca");
-  assert.equal(pickTheme("bosque", THEMES, DEFAULT_LOOK), "bosque");
+  assert.equal(pickTheme("burdeos", THEMES, DEFAULT_LOOK), "burdeos");
   assert.equal(pickLayout("tres", LAYOUTS, DEFAULT_LOOK), "izq");
   assert.equal(pickLayout(null, LAYOUTS, DEFAULT_LOOK), "izq");
   assert.equal(pickLayout("una", LAYOUTS, DEFAULT_LOOK), "una");
@@ -44,6 +44,33 @@ test("unknown theme or layout: the default one is used", () => {
   assert.equal(render({ tema: "nope", formato: "tres" }), render(DEFAULT_LOOK));
   assert.equal(render({ tema: "toString", formato: "una" }), render({ tema: "marca", formato: "una" }));
   assert.deepEqual(cleanLook({ tema: "nope", formato: "tres" }), DEFAULT_LOOK);
+});
+
+test("the four themes exist, Burdeos with its colors", () => {
+  assert.equal(Object.keys(THEMES).length, 4);
+  assert.equal(TEXTS.themeNames.burdeos, "Burdeos");
+  assert.equal(TEXTS.themeNames.bosque, undefined);
+  assert.deepEqual(THEMES.burdeos, {
+    lateral: "#5B2333", lateralTexto: "#FBF7F4", acento: "#D4A373", acentoTexto: "#8A4B2A", fondo: "#FFFDFB",
+    titulos: "#5B2333", texto: "#2B2224", suave: "#6B5E60", linea: "#E5D9D6"
+  });
+  for (const key of Object.keys(THEMES)) {
+    for (const color of Object.values(THEMES[key])) assert.match(color, /^#[0-9A-F]{6}$/, key);
+  }
+});
+
+test("a saved look or a copy with \"bosque\" opens with \"burdeos\"", () => {
+  assert.equal(cleanLook({ tema: "bosque", formato: "dcha" }).tema, "burdeos");
+  assert.equal(cleanLook({ tema: "bosque", formato: "dcha" }).formato, "dcha");
+  const old = JSON.stringify({ programa: "MiCurriculum", formato: 1, datos: SAMPLE_DATA, aspecto: { tema: "bosque", formato: "una" } });
+  const result = parseCopy(old);
+  assert.equal(result.ok, true);
+  assert.equal(result.look.tema, "burdeos");
+  assert.equal(result.look.formato, "una");
+  // The saved data in the browser goes through the same cleaning
+  const { createSaver } = require("../APP/js/storage.js");
+  const fake = { getItem: () => old, setItem: () => {}, removeItem: () => {} };
+  assert.equal(createSaver(fake, () => {}).load().look.tema, "burdeos");
 });
 
 test("the sample of each theme uses its side column and accent colors", () => {

@@ -357,4 +357,16 @@ body {
     break-after: avoid;
     break-inside: avoid;
   }
+  /* The sheet takes the width of the page, so no thin white strip is left at the edge
+     when the browser rounds the size of the page. */
+  .sheet, .sheet .cv { width: 100%; }
+}
+
+/* Firefox only: its PDF page for A4 is 596 × 842 pt (rounded up), and the extra 0.7 pt at
+   the right could not be painted. The page is given that same size and the sheet fills it. */
+@supports (-moz-appearance: none) {
+  @page { size: 596pt 842pt; margin: 0; }
+  @media print {
+    .sheet, .sheet .cv { width: 596pt; height: 842pt; }
+  }
 }

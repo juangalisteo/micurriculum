@@ -38,7 +38,7 @@ var TEXTS = {
 
   // Export to PDF: button of the top bar and its messages
   pdfExport: "Exportar PDF",
-  pdfExportHelp: "En la ventana de imprimir, elige Guardar como PDF",
+  pdfExportHelp: "En la ventana de imprimir, elige Guardar como PDF. Elige Guardar en PDF, no Microsoft Print to PDF: ese lo guarda como imagen.",
   pdfOverflowConfirm: "El contenido no cabe en una página y se cortará. ¿Exportar igualmente?",
 
   // Look: theme and layout, in the top bar
@@ -47,7 +47,7 @@ var TEXTS = {
   themeNames: {
     marca: "Marca",
     oceano: "Océano",
-    bosque: "Bosque",
+    burdeos: "Burdeos",
     claro: "Claro"
   },
   layoutNames: {

@@ -13,5 +13,25 @@ if not exist "%PAGINA%" (
  pause
  exit /b 1
 )
+rem Navegador por defecto para las webs (http), leido del registro de Windows.
+rem No se usa el programa asociado a .html: puede ser un editor (VS Code).
+set "PROGID="
+set "ORDEN="
+set "NAVEGADOR="
+for /f "tokens=2,*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice" /v ProgId 2^>nul ^| find "REG_SZ"') do set "PROGID=%%B"
+if defined PROGID for /f "tokens=2,*" %%A in ('reg query "HKCR\%PROGID%\shell\open\command" /ve 2^>nul ^| find "REG_"') do set "ORDEN=%%B"
+if defined ORDEN call :primero %ORDEN%
+if defined NAVEGADOR if exist "%NAVEGADOR%" (
+ start "" "%NAVEGADOR%" "%PAGINA%"
+ goto :fin
+)
+rem Si no se encuentra el navegador, se abre como antes.
 start "" "%PAGINA%"
+:fin
 endlocal
+exit /b 0
+
+rem El programa es la primera parte de la orden del registro, sin comillas.
+:primero
+set "NAVEGADOR=%~1"
+exit /b 0

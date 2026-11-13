@@ -32,6 +32,7 @@ if (typeof module !== "undefined") {
     var THEMES = themesModule.THEMES;
     var LAYOUTS = themesModule.LAYOUTS;
     var DEFAULT_LOOK = themesModule.DEFAULT_LOOK;
+    var RENAMED_THEMES = themesModule.RENAMED_THEMES;
   }
 }
 
@@ -145,11 +146,15 @@ function cleanData(raw) {
   return data;
 }
 
-/** Look: a known theme and layout; the font is always the one of the template. */
+/**
+ * Look: a known theme and layout; the font is always the one of the template.
+ * A theme that changed its name (RENAMED_THEMES) becomes the new one.
+ */
 function cleanLook(raw) {
   var l = isPlainObject(raw) ? raw : {};
+  var tema = Object.prototype.hasOwnProperty.call(RENAMED_THEMES, l.tema) ? RENAMED_THEMES[l.tema] : l.tema;
   return {
-    tema: Object.prototype.hasOwnProperty.call(THEMES, l.tema) ? l.tema : DEFAULT_LOOK.tema,
+    tema: Object.prototype.hasOwnProperty.call(THEMES, tema) ? tema : DEFAULT_LOOK.tema,
     formato: LAYOUTS.indexOf(l.formato) >= 0 ? l.formato : DEFAULT_LOOK.formato,
     letra: DEFAULT_LOOK.letra
   };

@@ -36,7 +36,7 @@ test("file name without a name: CV_SIN_NOMBRE", () => {
 });
 
 test("saving and opening a copy gives back the same data and look", () => {
-  const look = { tema: "bosque", formato: "dcha", letra: DEFAULT_LOOK.letra };
+  const look = { tema: "burdeos", formato: "dcha", letra: DEFAULT_LOOK.letra };
   const text = serializeCopy(SAMPLE_DATA, look);
   const copy = JSON.parse(text);
   assert.equal(copy.programa, "MiCurriculum");

@@ -174,22 +174,22 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
       (mono || '<svg class="mono" viewBox="-14 -20 152 144"><text x="62" y="96">' + initials + "</text></svg>") +
       (photo ? '<div class="foto"><img src="' + esc(photo) + '" alt=""></div>' : '<div class="iniciales">' + initials + "</div>") +
     "</div>" +
-    '<div><h1 class="nombre">' + esc(d.nombre) + "</h1>" +
+    '<div class="nom"><h1 class="nombre">' + esc(d.nombre) + "</h1>" +
       (d.puesto ? '<p class="puesto">' + esc(d.puesto) + "</p>" : "") + '<div class="raya"></div></div>' +
     (d.perfil ? '<div class="perfil"><h3>' + esc(texts.cvProfile) + "</h3>" + String(d.perfil).split(/\n\s*\n/).map(function (t) {
       return "<p>" + esc(t).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>") + "</p>";
     }).join("") + "</div>" : "") +
-    (contact.length ? "<div><h3>" + esc(texts.cvContact) + '</h3><ul class="lista">' + contact.map(function (c) {
+    (contact.length ? '<div class="con"><h3>' + esc(texts.cvContact) + '</h3><ul class="lista">' + contact.map(function (c) {
       var link = safeLink(c.enlace);
       return "<li>" + cvIcon(c.tipo) + (link ? '<a href="' + esc(link) + '">' + esc(c.texto) + "</a>" : "<span>" + esc(c.texto) + "</span>") + "</li>";
     }).join("") + "</ul></div>" : "") +
-    (languages.length ? "<div><h3>" + esc(texts.cvLanguages) + '</h3><ul class="lista">' + languages.map(function (i) {
+    (languages.length ? '<div class="idi"><h3>' + esc(texts.cvLanguages) + '</h3><ul class="lista">' + languages.map(function (i) {
       return "<li>" + cvIcon("idioma") + "<span>" + esc(i.idioma) + " <small>· " + esc(i.nivel) + "</small></span></li>";
     }).join("") + "</ul></div>" : "") +
-    (skills.length ? "<div><h3>" + esc(texts.cvTools) + '</h3><ul class="lista hb">' + skills.map(function (h) {
+    (skills.length ? '<div class="her"><h3>' + esc(texts.cvTools) + '</h3><ul class="lista hb">' + skills.map(function (h) {
       return "<li><span><b>" + esc(h.grupo) + "</b><br><small>" + esc(h.items) + "</small></span></li>";
     }).join("") + "</ul></div>" : "") +
-    (others.length ? "<div><h3>" + esc(texts.cvOther) + '</h3><ul class="lista">' + others.map(function (o) {
+    (others.length ? '<div class="otr"><h3>' + esc(texts.cvOther) + '</h3><ul class="lista">' + others.map(function (o) {
       return "<li>" + cvIcon("otro") + "<span>" + esc(o.texto) + (o.detalle ? " <small>· " + esc(o.detalle) + "</small>" : "") + "</span></li>";
     }).join("") + "</ul></div>" : "") +
     '<p class="pie">' + esc(texts.cvFooter) + "</p>" +
