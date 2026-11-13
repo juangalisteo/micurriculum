@@ -38,7 +38,7 @@ var TEXTS = {
 
   // Export to PDF: button of the top bar and its messages
   pdfExport: "Exportar PDF",
-  pdfExportHelp: "En la ventana de imprimir, elige Guardar como PDF. Elige Guardar en PDF, no Microsoft Print to PDF: ese lo guarda como imagen.",
+  pdfExportHelp: "En la ventana de imprimir, elige Guardar como PDF (Chrome) o Guardar en PDF (Firefox), no Microsoft Print to PDF: ese lo guarda como imagen.",
   pdfOverflowConfirm: "El contenido no cabe en una página y se cortará. ¿Exportar igualmente?",
 
   // Look: theme and layout, in the top bar
@@ -95,6 +95,10 @@ var TEXTS = {
   rowUp: "Subir",
   rowDown: "Bajar",
   listEmpty: "Todavía no hay ninguna fila.",
+  listFull: "Ya hay {n} filas, el máximo.",
+  // Under a field with a limit of characters; {n} is the number left
+  charsLeftMany: "Quedan {n} caracteres",
+  charsLeftOne: "Queda 1 carácter",
   contactTypes: {
     lugar: "Lugar",
     telefono: "Teléfono",
@@ -131,7 +135,7 @@ var TEXTS = {
   // Form: methodology
   formMethod: "Metodología",
   fieldMethodTitle: "Título",
-  methodHelp: "Una fila por paso. Si no hay pasos, el recuadro no sale.",
+  methodHelp: "Hasta 5 pasos, una fila por paso. Si no hay pasos, el recuadro no sale.",
   fieldStep: "Paso",
   stepAdd: "Añadir paso",
 

@@ -1,6 +1,6 @@
 /*
- * MiCurriculum · tests for form.js (contact links, photo size, tags, rows
- * and the order of the sections)
+ * MiCurriculum · tests for form.js (contact links, photo size, tags, rows,
+ * the order of the sections and the limits of the methodology)
  * and state.js (the data and the rows of a list).
  *
  * Project:   MiCurriculum
@@ -16,9 +16,10 @@ const assert = require("node:assert/strict");
 const TEXTS = require("../APP/js/texts.js");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
 const { DEFAULT_LOOK } = require("../APP/js/themes.js");
+const { METHOD_LIMITS } = require("../APP/js/render.js");
 const {
   CONTACT_TYPES, buildContactLink, fitImageSize, updateContactLink,
-  parseTags, formatTags, getRowValue, setRowValue, buildOrderRows, orderFromRows
+  parseTags, formatTags, clampText, formatCharsLeft, getRowValue, setRowValue, buildOrderRows, orderFromRows
 } = require("../APP/js/form.js");
 const { addRow, removeRow, moveRow, createStore } = require("../APP/js/state.js");
 
@@ -186,13 +187,56 @@ test("order: the store saves it, so the sheet and the copies get it", () => {
   assert.deepEqual(seen, ["experiencia", "cursos"]);
 });
 
+test("methodology limits: 22 characters of title, 5 steps of 12 characters", () => {
+  assert.deepEqual(METHOD_LIMITS, { title: 22, steps: 5, step: 12 });
+  // the sample data is within the limits
+  assert.ok(SAMPLE_DATA.metodologia.titulo.length <= METHOD_LIMITS.title);
+  assert.ok(SAMPLE_DATA.metodologia.pasos.length <= METHOD_LIMITS.steps);
+  for (const step of SAMPLE_DATA.metodologia.pasos) assert.ok(step.length <= METHOD_LIMITS.step, step);
+});
+
+test("a field with a limit never keeps more characters", () => {
+  assert.equal(clampText("¿Mi metodología?", METHOD_LIMITS.title), "¿Mi metodología?");
+  assert.equal(clampText("¿Mi forma de trabajar?", METHOD_LIMITS.title), "¿Mi forma de trabajar?"); // 22, just fits
+  assert.equal(clampText("¿Mi forma de trabajar hoy?", METHOD_LIMITS.title), "¿Mi forma de trabajar ");
+  assert.equal(clampText("Experimentar", METHOD_LIMITS.step), "Experimentar"); // 12
+  assert.equal(clampText("Experimentar mucho", METHOD_LIMITS.step), "Experimentar");
+  assert.equal(clampText("", 5), "");
+  assert.equal(clampText(undefined, 5), "");
+  assert.equal(clampText("abc", undefined), "abc"); // no limit
+  assert.equal(clampText("abc", 0), "");
+});
+
+test("the counter says how many characters are left", () => {
+  assert.equal(formatCharsLeft(TEXTS, 22, "¿Mi metodología?"), "Quedan 6 caracteres");
+  assert.equal(formatCharsLeft(TEXTS, 22, ""), "Quedan 22 caracteres");
+  assert.equal(formatCharsLeft(TEXTS, 12, "Experimenta"), "Queda 1 carácter");
+  assert.equal(formatCharsLeft(TEXTS, 12, "Experimentar"), "Quedan 0 caracteres");
+  assert.equal(formatCharsLeft(TEXTS, 12, "Experimentar mucho"), "Quedan 0 caracteres"); // never negative
+  assert.equal(formatCharsLeft(TEXTS, 5, undefined), "Quedan 5 caracteres");
+});
+
+test("steps: the list stops at 5 rows (the form disables the add button there)", () => {
+  const steps = ["Escuchar", "Ordenar", "Diseñar", "Ilusionar"];
+  const canAdd = () => steps.length < METHOD_LIMITS.steps;
+  assert.equal(canAdd(), true);
+  addRow(steps, "");
+  assert.equal(steps.length, 5);
+  assert.equal(canAdd(), false);
+  removeRow(steps, 4);
+  assert.equal(canAdd(), true);
+});
+
 test("every new text of the form exists", () => {
   const keys = [
     "formLanguages", "fieldLanguage", "fieldLevel", "formSkills", "skillsHelp", "fieldGroup", "fieldItems",
     "formOther", "fieldOtherText", "fieldOtherDetail", "formExperience", "fieldCompany", "fieldDate", "fieldRole",
     "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "fieldSubtitle",
     "formMethod", "fieldMethodTitle", "methodHelp",
-    "fieldStep", "stepAdd", "formOrder", "orderHelp", "orderShow"
+    "fieldStep", "stepAdd", "formOrder", "orderHelp", "orderShow", "listFull", "charsLeftMany", "charsLeftOne"
   ];
   for (const key of keys) assert.equal(typeof TEXTS[key], "string", key);
+  assert.ok(TEXTS.charsLeftMany.includes("{n}"));
+  assert.ok(TEXTS.listFull.includes("{n}"));
+  assert.equal(TEXTS.methodHelp, "Hasta 5 pasos, una fila por paso. Si no hay pasos, el recuadro no sale.");
 });

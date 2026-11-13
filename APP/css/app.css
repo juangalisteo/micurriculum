@@ -308,6 +308,10 @@ body {
 .row-field-text { flex: 1; min-width: 0; }
 
 .row-buttons { display: flex; gap: 2px; }
+/* Characters left under a field with a limit (methodology). In a short row the buttons stay level with the field. */
+.chars-left { margin-top: 3px; }
+.row:has(.chars-left) { align-items: flex-start; }
+.row:has(.chars-left) .row-buttons { margin-top: 3px; }
 
 /* Rows with many fields: one under the other, labels in sight */
 .rows-stacked .row { align-items: flex-start; padding: 10px 0; }

@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
 const { DEFAULT_LOOK } = require("../APP/js/themes.js");
 const {
-  STORAGE_KEY, cleanData, cleanLook, buildCopy, serializeCopy, parseCopy, nameForFile, copyFileName, createSaver
+  STORAGE_KEY, cleanData, cleanMethod, cleanLook, buildCopy, serializeCopy, parseCopy, nameForFile, copyFileName, createSaver
 } = require("../APP/js/storage.js");
 
 const day = new Date(2026, 10, 11); // 11 November 2026, local time
@@ -100,6 +100,27 @@ test("cleaning: the order keeps only sections that can be edited, each once", ()
   assert.deepEqual(d.orden, ["cursos", "experiencia"]);
   assert.deepEqual(cleanData({ orden: [] }).orden, []);
   assert.deepEqual(cleanData({ orden: "cursos" }).orden, ["formacion", "experiencia", "cursos"]);
+});
+
+test("cleaning: a methodology with more than fits is cut when the copy is opened", () => {
+  const long = {
+    titulo: "¿Cómo trabajo yo cada día en mis proyectos?",
+    pasos: ["Escuchar", "Ordenar con mucho cuidado", "Diseñar", "Ilusionar", "Entregar", "Revisar", "Celebrar"]
+  };
+  assert.deepEqual(cleanMethod(long), {
+    titulo: "¿Cómo trabajo yo cada ",
+    pasos: ["Escuchar", "Ordenar con ", "Diseñar", "Ilusionar", "Entregar"]
+  });
+  assert.equal(cleanMethod(long).titulo.length, 22);
+  // through a whole copy
+  const result = parseCopy(copyText({ metodologia: long }));
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.data.metodologia, cleanMethod(long));
+  // what fits is not touched; empty rows count as rows
+  assert.deepEqual(cleanMethod(SAMPLE_DATA.metodologia), SAMPLE_DATA.metodologia);
+  assert.deepEqual(cleanMethod({ titulo: "T", pasos: ["", "", "", "", "", "Seis"] }), { titulo: "T", pasos: ["", "", "", "", ""] });
+  assert.deepEqual(cleanMethod({ pasos: "no es lista" }), { titulo: "", pasos: [] });
+  assert.deepEqual(cleanMethod(null), { titulo: "", pasos: [] });
 });
 
 test("cleaning: the logo goes through svg-clean and the photo must be data:image", () => {

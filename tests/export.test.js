@@ -47,7 +47,7 @@ test("when the content does not fit, the user decides", () => {
 
 test("the export texts are in texts.js", () => {
   assert.equal(TEXTS.pdfExport, "Exportar PDF");
-  assert.equal(TEXTS.pdfExportHelp, "En la ventana de imprimir, elige Guardar como PDF. Elige Guardar en PDF, no Microsoft Print to PDF: ese lo guarda como imagen.");
+  assert.equal(TEXTS.pdfExportHelp, "En la ventana de imprimir, elige Guardar como PDF (Chrome) o Guardar en PDF (Firefox), no Microsoft Print to PDF: ese lo guarda como imagen.");
   assert.equal(TEXTS.pdfOverflowConfirm, "El contenido no cabe en una página y se cortará. ¿Exportar igualmente?");
   assert.equal(TEXTS.copyOpen, "Abrir CV.json");
   assert.equal(TEXTS.sampleReset, "Volver al ejemplo (se borran tus datos)");

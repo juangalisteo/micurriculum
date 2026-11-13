@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
 const TEXTS = require("../APP/js/texts.js");
 const { THEMES, LAYOUTS, DEFAULT_LOOK } = require("../APP/js/themes.js");
 const SAMPLE_DATA = require("../APP/js/sample-data.js");
-const { getInitials, joinSpanish, cleanSteps, escapeHtml, safeLink, buildSection, buildCvHtml } = require("../APP/js/render.js");
+const { getInitials, joinSpanish, cleanSteps, fitFontSize, escapeHtml, safeLink, buildSection, buildCvHtml } = require("../APP/js/render.js");
 
 const render = (data, look = DEFAULT_LOOK) => buildCvHtml(data, look, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
 const withData = (changes) => Object.assign(JSON.parse(JSON.stringify(SAMPLE_DATA)), changes);
@@ -91,6 +91,25 @@ test("methodology: empty steps are dropped; with no steps the box is not shown",
     assert.ok(!render(withData({ metodologia: { titulo: "Mi forma", pasos } })).includes('class="meto"'));
   }
   assert.ok(!render(withData({ metodologia: undefined })).includes('class="meto"'));
+});
+
+test("the methodology texts get a smaller font only when they are wider than the box", () => {
+  assert.equal(fitFontSize(45.33, 366, 300), 45.33);   // fits: the size of cv.css
+  assert.equal(fitFontSize(45.33, 366, 366), 45.33);
+  assert.equal(fitFontSize(17.33, 366, 380), 16.69);   // a little too wide: a little smaller
+  assert.equal(fitFontSize(17.33, 366, 732), 8.66);    // twice too wide: half
+  assert.equal(fitFontSize(17.33, 0, 300), 17.33);     // nothing measured yet: the base size
+  assert.equal(fitFontSize(17.33, NaN, 300), 17.33);
+  assert.equal(fitFontSize(0, 366, 300), 0);
+  assert.equal(fitFontSize(undefined, 366, 300), 0);
+});
+
+test("the main column puts the sections in their own block, before the methodology box", () => {
+  const html = render(SAMPLE_DATA);
+  assert.match(html, /<main class="main"><div class="apartados"><section><h2>/);
+  assert.match(html, /<\/section><\/div><section class="meto">/);
+  const noMethod = render(withData({ metodologia: { titulo: "x", pasos: [] } }));
+  assert.match(noMethod, /<\/section><\/div><\/main>/);
 });
 
 test("sections that cannot be edited are not painted, even when they are in the order", () => {

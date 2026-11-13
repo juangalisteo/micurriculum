@@ -6,8 +6,8 @@
  * smaller (or back to real size) with a CSS transform. When printing, the
  * transform is not used and the sheet comes out at real size.
  *
- * computeSheetScale() and isOverflowing() do not need the browser and are
- * tested in Node with made-up sizes.
+ * computeSheetScale(), isOverflowing(), contentLimit() and columnsOverflow()
+ * do not need the browser and are tested in Node with made-up sizes.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -34,8 +34,9 @@ function computeSheetScale(availableWidth, sheetWidth) {
 }
 
 /**
- * True when any of the content heights goes past the sheet height
- * (plus a small tolerance for rounding). Heights are numbers in px.
+ * True when any of the content heights goes past the limit (plus a small
+ * tolerance for rounding). The limit is the sheet height, or where the
+ * content of a column must end (contentLimit). Numbers in px.
  */
 function isOverflowing(sheetHeight, contentHeights) {
   var limit = Number(sheetHeight);
@@ -43,6 +44,30 @@ function isOverflowing(sheetHeight, contentHeights) {
   return contentHeights.some(function (h) {
     var height = Number(h);
     return isFinite(height) && height > limit + OVERFLOW_TOLERANCE;
+  });
+}
+
+/**
+ * Where the content of a column may end: the top of the methodology box
+ * when the column has one (the box is fixed at the bottom, so the sections
+ * must stop before it), else the sheet height. Numbers in px from the top
+ * of the sheet; a box top that is not a valid height inside the sheet is ignored.
+ */
+function contentLimit(sheetHeight, boxTop) {
+  var limit = Number(sheetHeight);
+  var box = Number(boxTop);
+  if (isFinite(limit) && isFinite(box) && box > 0 && box < limit) return box;
+  return limit;
+}
+
+/**
+ * True when the content of any column ends past its own limit.
+ * columns: [{ bottom, limit }], as measureColumns() returns them.
+ */
+function columnsOverflow(columns) {
+  if (!Array.isArray(columns)) return false;
+  return columns.some(function (column) {
+    return !!column && isOverflowing(column.limit, [column.bottom]);
   });
 }
 
@@ -69,24 +94,30 @@ function fitSheet(doc) {
 }
 
 /**
- * Where the content of each column ends, measured from the top of the CV,
- * in px of the real-size sheet. The padding at the bottom of a column does
- * not count: in the template some content already uses part of it.
+ * For each column, where its content ends and where it may end, measured
+ * from the top of the CV in px of the real-size sheet: { bottom, limit }.
+ * The padding at the bottom of a column does not count: in the template
+ * some content already uses part of it. In the main column the sections
+ * (.apartados) must end before the methodology box, which is fixed below.
  */
-function measureContentHeights(cv) {
+function measureColumns(cv) {
   var top = cv.getBoundingClientRect().top;
   var scale = cv.offsetHeight ? cv.getBoundingClientRect().height / cv.offsetHeight : 1;
-  var heights = [];
-  var columns = cv.querySelectorAll(".lado, .main");
-  for (var i = 0; i < columns.length; i++) {
+  var real = function (y) { return y / (scale || 1); };
+  var columns = [];
+  var nodes = cv.querySelectorAll(".lado, .main");
+  for (var i = 0; i < nodes.length; i++) {
+    var sections = nodes[i].querySelector(".apartados") || nodes[i];
+    var method = nodes[i].querySelector(".meto");
     var bottom = 0;
-    for (var j = 0; j < columns[i].children.length; j++) {
-      var box = columns[i].children[j].getBoundingClientRect();
+    for (var j = 0; j < sections.children.length; j++) {
+      var box = sections.children[j].getBoundingClientRect();
       if (box.height > 0) bottom = Math.max(bottom, box.bottom - top);
     }
-    heights.push(bottom / (scale || 1));
+    var boxTop = method ? real(method.getBoundingClientRect().top - top) : NaN;
+    columns.push({ bottom: real(bottom), limit: contentLimit(cv.offsetHeight, boxTop) });
   }
-  return heights;
+  return columns;
 }
 
 /** Shows or hides the warning above the sheet. */
@@ -94,7 +125,7 @@ function checkOverflow(doc) {
   var warning = doc.getElementById("sheet-warning");
   var cv = doc.querySelector("#sheet .cv");
   if (!warning || !cv) return;
-  warning.hidden = !isOverflowing(cv.offsetHeight, measureContentHeights(cv));
+  warning.hidden = !columnsOverflow(measureColumns(cv));
 }
 
 /** Fits the sheet now and every time the preview area changes size. */
@@ -104,7 +135,14 @@ function watchSheetFit(doc) {
   var refit = function () { fitSheet(doc); };
   if (preview && view.ResizeObserver) new view.ResizeObserver(refit).observe(preview);
   view.addEventListener("resize", refit);
-  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { refit(); checkOverflow(doc); });
+  if (doc.fonts && doc.fonts.ready) {
+    doc.fonts.ready.then(function () {
+      refit();
+      // With the real fonts the methodology texts measure differently (render.js).
+      if (typeof fitMethodText === "function") fitMethodText(doc);
+      checkOverflow(doc);
+    });
+  }
   refit();
 }
 
@@ -112,6 +150,8 @@ if (typeof module !== "undefined") {
   module.exports = {
     OVERFLOW_TOLERANCE: OVERFLOW_TOLERANCE,
     computeSheetScale: computeSheetScale,
-    isOverflowing: isOverflowing
+    isOverflowing: isOverflowing,
+    contentLimit: contentLimit,
+    columnsOverflow: columnsOverflow
   };
 }

@@ -8,9 +8,9 @@
  * STATE.update(), so the sheet is painted again at once. createListEditor()
  * is the reusable piece for every list of rows.
  *
- * buildContactLink(), fitImageSize(), the tag and row helpers and
- * buildOrderRows() and orderFromRows() do not need the browser and are
- * tested in Node.
+ * buildContactLink(), fitImageSize(), the tag and row helpers,
+ * buildOrderRows(), orderFromRows(), clampText() and formatCharsLeft() do
+ * not need the browser and are tested in Node.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -27,6 +27,11 @@ var CONTACT_TYPES = ["lugar", "telefono", "web", "github", "correo", "linkedin"]
 /* Longest side of the photo kept in the data, in pixels. */
 var PHOTO_MAX_SIDE = 600;
 var PHOTO_QUALITY = 0.85;
+
+/* In Node, the methodology limits come from render.js; in the browser that file is loaded first. */
+if (typeof module !== "undefined" && typeof METHOD_LIMITS === "undefined") {
+  var METHOD_LIMITS = require("./render.js").METHOD_LIMITS;
+}
 
 /* ---------- Parts that do not need the browser ---------- */
 
@@ -90,6 +95,19 @@ function formatTags(tags) {
   return Array.isArray(tags) ? tags.join(", ") : String(tags == null ? "" : tags);
 }
 
+/** The text cut to max characters (a field with a limit never keeps more). */
+function clampText(value, max) {
+  var text = String(value == null ? "" : value);
+  var limit = Number(max);
+  return isFinite(limit) && limit >= 0 && text.length > limit ? text.slice(0, limit) : text;
+}
+
+/** "Quedan 7 caracteres" / "Queda 1 carácter": what is left of a limit for the given text. */
+function formatCharsLeft(texts, max, value) {
+  var left = Math.max(0, Number(max) - String(value == null ? "" : value).length);
+  return left === 1 ? texts.charsLeftOne : texts.charsLeftMany.replace("{n}", String(left));
+}
+
 /**
  * The text shown in the field of a row. A field without key is a row that
  * is only a text (a methodology step). field.format turns the stored value
@@ -141,8 +159,30 @@ function buildFormSection(doc, title, open) {
 }
 
 /**
+ * Puts a limit of characters on a field: the browser does not let the user
+ * type more, a line under it says how many are left, and the value is cut
+ * if something longer still gets in. Returns the function that reads the
+ * value, already cut.
+ */
+function limitField(doc, input, max, texts) {
+  input.setAttribute("maxlength", max);
+  var counter = el(doc, "p", { class: "help chars-left", id: input.id + "-left" });
+  var describedBy = input.getAttribute("aria-describedby");
+  input.setAttribute("aria-describedby", (describedBy ? describedBy + " " : "") + counter.id);
+  var read = function () {
+    var value = clampText(input.value, max);
+    if (value !== input.value) input.value = value;
+    counter.textContent = formatCharsLeft(texts, max, value);
+    return value;
+  };
+  read();
+  return { counter: counter, read: read };
+}
+
+/**
  * A text field with its label. kind: "text" or "textarea".
- * onInput(value) is called on every key.
+ * onInput(value) is called on every key. maxLength (with texts) puts a limit
+ * of characters with its counter.
  */
 function buildTextField(doc, opts) {
   var id = newFieldId("f");
@@ -154,9 +194,11 @@ function buildTextField(doc, opts) {
   input.value = opts.value || "";
   var helpId = opts.help ? id + "-help" : null;
   if (helpId) input.setAttribute("aria-describedby", helpId);
-  input.addEventListener("input", function () { opts.onInput(input.value); });
+  var limit = opts.maxLength ? limitField(doc, input, opts.maxLength, opts.texts) : null;
+  input.addEventListener("input", function () { opts.onInput(limit ? limit.read() : input.value); });
   wrap.appendChild(input);
   if (opts.help) wrap.appendChild(el(doc, "p", { class: "help", id: helpId }, opts.help));
+  if (limit) wrap.appendChild(limit.counter);
   return wrap;
 }
 
@@ -254,13 +296,16 @@ function readLogoFile(file, done) {
  * opts:
  *   getList()          the array in STATE.data (created if missing)
  *   fields             [{ key, label, kind: "text" | "textarea" | "select",
- *                         options: [{ value, label }], format, parse }]
+ *                         options: [{ value, label }], format, parse, maxLength }]
  *                      key null = the row is only a text (methodology steps)
+ *                      maxLength = limit of characters, with its counter
  *   stacked            true: the fields go one under the other, with their
  *                      labels in sight (rows with many fields)
  *   newItem()          a new empty row
  *   onRowChange(row)   optional, after a field of a row changes
  *   addText            text of the add button
+ *   maxRows            optional, most rows allowed: the add button is
+ *                      disabled when the list reaches it
  *   update(fn)         how to change the data (STATE.update)
  *   texts              TEXTS
  */
@@ -299,15 +344,17 @@ function createListEditor(doc, opts) {
     }
     var helpId = field.help ? id + "-help" : null;
     if (helpId) input.setAttribute("aria-describedby", helpId);
+    var limit = field.maxLength && field.kind !== "select" ? limitField(doc, input, field.maxLength, texts) : null;
     input.addEventListener(field.kind === "select" ? "change" : "input", function () {
       opts.update(function () {
         var items = opts.getList();
-        if (!setRowValue(items, index, field, input.value)) return;
+        if (!setRowValue(items, index, field, limit ? limit.read() : input.value)) return;
         if (opts.onRowChange) opts.onRowChange(items[index]);
       });
     });
     wrap.appendChild(input);
     if (field.help) wrap.appendChild(el(doc, "p", { class: "help", id: helpId }, field.help));
+    if (limit) wrap.appendChild(limit.counter);
     return wrap;
   }
 
@@ -333,6 +380,7 @@ function createListEditor(doc, opts) {
         removeRow(items, index);
         focusIndex = Math.min(index, items.length - 1);
       } else if (action === "add") {
+        if (isFull(items)) return;
         focusIndex = addRow(items, opts.newItem());
       }
     });
@@ -347,6 +395,11 @@ function createListEditor(doc, opts) {
     var target = rows[focusIndex].querySelector('[data-action="' + focusAction + '"]');
     if (!target || target.disabled) target = rows[focusIndex].querySelector("button:not([disabled])");
     if (target) target.focus();
+  }
+
+  /** True when the list has all the rows it may have (maxRows). */
+  function isFull(items) {
+    return typeof opts.maxRows === "number" && items.length >= opts.maxRows;
   }
 
   function refresh() {
@@ -365,6 +418,9 @@ function createListEditor(doc, opts) {
       list.appendChild(li);
     });
     empty.hidden = items.length > 0;
+    add.disabled = isFull(items);
+    if (add.disabled) add.title = texts.listFull.replace("{n}", String(opts.maxRows));
+    else add.removeAttribute("title");
   }
 
   add.addEventListener("click", function () { act("add", -1); });
@@ -463,7 +519,8 @@ function buildForm(doc, state, texts) {
       },
       fields: opts.fields,
       newItem: opts.newItem,
-      addText: opts.addText
+      addText: opts.addText,
+      maxRows: opts.maxRows
     });
     section.body.appendChild(editor.element);
     host.appendChild(section.element);
@@ -580,7 +637,7 @@ function buildForm(doc, state, texts) {
   // "proyectos" has no section in the first version: data that brings it is kept but not shown here
   orderRows.forEach(function (item) { mainElements[item.key] = mainSections[item.key]().element; });
 
-  // Methodology: a title and one row per step
+  // Methodology: a title and one row per step, within the limits of the fixed box (METHOD_LIMITS)
   var getMethod = function () {
     var m = state.data.metodologia;
     if (!m || typeof m !== "object") m = state.data.metodologia = { titulo: "", pasos: [] };
@@ -590,12 +647,13 @@ function buildForm(doc, state, texts) {
   var method = addListSection(texts.formMethod, null, {
     help: texts.methodHelp,
     getList: function () { return getMethod().pasos; },
-    fields: [{ key: null, label: texts.fieldStep, kind: "text" }],
+    fields: [{ key: null, label: texts.fieldStep, kind: "text", maxLength: METHOD_LIMITS.step }],
     newItem: function () { return ""; },
-    addText: texts.stepAdd
+    addText: texts.stepAdd,
+    maxRows: METHOD_LIMITS.steps
   });
   method.body.insertBefore(buildTextField(doc, {
-    label: texts.fieldMethodTitle, value: getMethod().titulo,
+    label: texts.fieldMethodTitle, value: getMethod().titulo, maxLength: METHOD_LIMITS.title, texts: texts,
     onInput: function (value) { state.update(function () { getMethod().titulo = value; }); }
   }), method.body.firstChild);
 
@@ -636,6 +694,8 @@ if (typeof module !== "undefined") {
     updateContactLink: updateContactLink,
     parseTags: parseTags,
     formatTags: formatTags,
+    clampText: clampText,
+    formatCharsLeft: formatCharsLeft,
     getRowValue: getRowValue,
     setRowValue: setRowValue,
     buildOrderRows: buildOrderRows,

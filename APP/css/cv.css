@@ -26,8 +26,10 @@
   font-family: var(--letra); color: var(--texto); font-size: 16px; line-height: normal; text-align: left;
   -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.cv.izq { grid-template-columns: 72mm 1fr; }
-.cv.dcha { grid-template-columns: 1fr 72mm; }
+/* One row of the whole sheet height, so the columns never grow past the sheet and the
+   methodology box, fixed at the bottom of the main column, stays in its place. */
+.cv.izq { grid-template-columns: 72mm 1fr; grid-template-rows: minmax(0, 1fr); }
+.cv.dcha { grid-template-columns: 1fr 72mm; grid-template-rows: minmax(0, 1fr); }
 .cv.dcha .lado { order: 2; }
 /* minmax(0, 1fr): when the main column does not fit, it is cut at the bottom (and the
    warning shows) instead of squashing the top band. When it fits, it is the same as 1fr. */
@@ -58,7 +60,13 @@
 .cv .pie { margin-top: auto; font: 600 7pt var(--letra); letter-spacing: .3em; opacity: .35; text-transform: uppercase; }
 
 /* ---------- Main column ---------- */
-.cv .main { padding: 14mm 12mm 13mm 11mm; display: flex; flex-direction: column; gap: 7.5mm; }
+/* Two rows: the sections (.apartados) take the space left over; the methodology box (.meto),
+   when there is one, has a fixed height and is anchored at the bottom. --hueco is the space
+   between sections and before the box. */
+.cv .main { --hueco: 7.5mm; padding: 14mm 12mm 10mm 11mm; display: grid; grid-template-rows: minmax(0, 1fr); gap: var(--hueco); min-height: 0; }
+/* The sections are cut at the top of the box when they do not fit (the warning shows then).
+   The negative margins keep the timeline dots and the space before the box out of the cut. */
+.cv .apartados { display: flex; flex-direction: column; gap: var(--hueco); min-height: 0; overflow: hidden; margin: 0 -3mm calc(-1 * var(--hueco)); padding: 0 3mm var(--hueco); }
 .cv .main h2 { display: flex; align-items: center; gap: 3mm; font: 600 12pt var(--letra); letter-spacing: .06em; text-transform: uppercase; color: var(--titulos); margin-bottom: 4.5mm; }
 .cv .main h2::after { content: ""; flex: 1; height: 0; border-bottom: .5mm dotted var(--linea); }
 .cv .tl { list-style: none; border-left: .3mm solid var(--linea); margin-left: 1.2mm; padding-left: 5mm; display: grid; gap: 5.2mm; }
@@ -82,14 +90,15 @@
 
 /* ---------- Methodology box ---------- */
 .cv .meto {
-  margin-top: auto; min-height: 44mm; position: relative; overflow: hidden; isolation: isolate; border-radius: 3mm;
+  height: 44mm; position: relative; overflow: hidden; isolation: isolate; border-radius: 3mm;
   background: var(--lateral); color: var(--lateral-texto); display: flex; flex-direction: column; justify-content: center; gap: 0; padding: 7mm 9mm 8mm;
   background-image: radial-gradient(color-mix(in srgb, var(--acento) 22%, transparent) .35mm, transparent .4mm);
   background-size: 4.2mm 4.2mm;
 }
 .cv .meto::after { content: ""; position: absolute; inset: auto 0 0 0; height: 34%; background: rgba(0, 0, 0, .28); clip-path: polygon(0 70%, 100% 0, 100% 100%, 0 100%); z-index: -1; }
 .cv .meto .mono { left: auto; right: -12mm; top: 50%; transform: translateY(-50%); width: 56mm; opacity: .2; }
-.cv .meto .pluma, .cv .meto .frase { position: relative; top: -4.4mm; } /* lifts the text by 10 % of the box */
+/* One line each, never wrapped: render.js makes the font smaller when a text is too wide. */
+.cv .meto .pluma, .cv .meto .frase { position: relative; top: -4.4mm; white-space: nowrap; } /* lifts the text by 10 % of the box */
 .cv .meto .pluma { font-family: Chorus, "Segoe Script", cursive; font-size: 34pt; line-height: .95; color: var(--acento); }
 .cv .meto .frase { margin-top: 2.8mm; text-align: left; font: 600 13pt/1.3 var(--letra); color: var(--lateral-texto); }
 
@@ -119,7 +128,13 @@
 .cv.una .cabeza .mono { left: -5mm; top: -7mm; width: 38mm; }
 .cv.una .pie { display: none; }
 /* A little less space in the main column, only in this layout. */
-.cv.una .main { padding: 7mm 14mm 8mm; gap: 4mm; }
-.cv.una .main h2 { margin-bottom: 2.5mm; }
-.cv.una .tl { gap: 2mm; }
-.cv.una .meto { min-height: 30mm; padding: 4mm 9mm 5mm; }
+.cv.una .main { --hueco: 5mm; padding: 7mm 14mm 0; }
+.cv.una .main h2 { margin-bottom: 3mm; }
+.cv.una .tl { gap: 2.4mm; }
+/* The methodology is a tab: centred, two thirds of the column, glued to the bottom edge of
+   the sheet, rounded only at the top, with a smaller title and sentence. */
+.cv.una .meto { height: 24mm; width: 66%; justify-self: center; border-radius: 3mm 3mm 0 0; padding: 3mm 8mm; }
+.cv.una .meto .mono { width: 36mm; right: -8mm; }
+.cv.una .meto .pluma, .cv.una .meto .frase { top: -1mm; }
+.cv.una .meto .pluma { font-size: 22pt; }
+.cv.una .meto .frase { margin-top: 1.6mm; font-size: 10pt; }

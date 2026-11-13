@@ -10,7 +10,8 @@
  * Whatever comes from a file or from the browser goes through cleanData()
  * and cleanLook(): missing fields become empty, unknown fields are dropped,
  * the order keeps only the sections that can be edited, the logo is
- * cleaned with cleanSvg() and the photo is kept only as data:image.
+ * cleaned with cleanSvg(), the photo is kept only as data:image and the
+ * methodology is cut to its limits (METHOD_LIMITS, in render.js).
  *
  * Everything above "Browser only" works without the browser and is tested in Node.
  *
@@ -27,6 +28,7 @@
 if (typeof module !== "undefined") {
   if (typeof cleanSvg === "undefined") var cleanSvg = require("./svg-clean.js").cleanSvg;
   if (typeof MAIN_SECTIONS === "undefined") var MAIN_SECTIONS = require("./render.js").MAIN_SECTIONS;
+  if (typeof METHOD_LIMITS === "undefined") var METHOD_LIMITS = require("./render.js").METHOD_LIMITS;
   if (typeof THEMES === "undefined") {
     var themesModule = require("./themes.js");
     var THEMES = themesModule.THEMES;
@@ -119,6 +121,20 @@ function cleanPhoto(value) {
   return /^data:image\/(png|jpe?g|gif|webp);base64,[a-z0-9+\/=\s]+$/i.test(text) ? text : "";
 }
 
+/**
+ * Methodology cut to its limits: the title to its characters, the steps to
+ * their number and each step to its characters. More would not fit in the
+ * fixed box of the sheet.
+ */
+function cleanMethod(method) {
+  var m = isPlainObject(method) ? method : {};
+  var steps = Array.isArray(m.pasos) ? m.pasos.slice(0, METHOD_LIMITS.steps) : [];
+  return {
+    titulo: cleanText(m.titulo).slice(0, METHOD_LIMITS.title),
+    pasos: steps.map(function (step) { return cleanText(step).slice(0, METHOD_LIMITS.step); })
+  };
+}
+
 /** CV data with exactly the fields the program knows. */
 function cleanData(raw) {
   var d = isPlainObject(raw) ? raw : {};
@@ -138,10 +154,7 @@ function cleanData(raw) {
   data.cursos = cleanRows(d.cursos, ROW_FIELDS.cursos);
   data.proyectos = cleanProjects(d.proyectos);
   data.habilidades = cleanRows(d.habilidades, ROW_FIELDS.habilidades);
-  data.metodologia = {
-    titulo: cleanText(method.titulo),
-    pasos: Array.isArray(method.pasos) ? method.pasos.map(cleanText) : []
-  };
+  data.metodologia = cleanMethod(method);
   data.orden = cleanOrder(d.orden);
   return data;
 }
@@ -377,6 +390,7 @@ if (typeof module !== "undefined") {
     COPY_FORMAT: COPY_FORMAT,
     STORAGE_KEY: STORAGE_KEY,
     cleanData: cleanData,
+    cleanMethod: cleanMethod,
     cleanLook: cleanLook,
     cleanOrder: cleanOrder,
     cleanPhoto: cleanPhoto,

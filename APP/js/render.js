@@ -27,6 +27,14 @@ if (typeof module !== "undefined" && typeof cleanSvg === "undefined") {
  */
 var MAIN_SECTIONS = ["formacion", "experiencia", "cursos"];
 
+/*
+ * Limits of the methodology text, so the box (fixed at the bottom of the
+ * main column, with a fixed height) never changes: characters of the title,
+ * number of steps and characters of each step. The form does not let the
+ * user write more, and a copy that brings more is cut when it is opened.
+ */
+var METHOD_LIMITS = { title: 22, steps: 5, step: 12 };
+
 var CV_ICONS = {
   telefono: '<path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
   correo: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M3 7l9 6 9-6"/>',
@@ -77,6 +85,21 @@ function joinSpanish(words) {
 /** Methodology steps without the empty ones (a new row not yet written). */
 function cleanSteps(steps) {
   return asList(steps).map(function (s) { return String(s == null ? "" : s).trim(); }).filter(Boolean);
+}
+
+/**
+ * Font size that makes a line of text fit in the available width: the base
+ * size when it already fits, smaller in proportion when it does not. The
+ * methodology title and sentence use it, so they always stay on one line
+ * inside the fixed box. Sizes and widths are numbers in the same unit.
+ */
+function fitFontSize(baseSize, availableWidth, textWidth) {
+  var base = Number(baseSize);
+  var available = Number(availableWidth);
+  var text = Number(textWidth);
+  if (!isFinite(base) || base <= 0) return 0;
+  if (!isFinite(available) || !isFinite(text) || available <= 0 || text <= available) return base;
+  return Math.floor(base * available / text * 100) / 100;
 }
 
 function cvIcon(type) {
@@ -201,9 +224,10 @@ function buildCvHtml(data, look, texts, themes, layouts, defaultLook) {
     '<p class="frase">' + esc(joinSpanish(steps.map(function (t, i) { return i ? String(t).toLowerCase() : String(t); }))) + ".</p>" +
     "</section>" : "";
 
-  var main = '<main class="main">' + asList(d.orden).filter(function (key) {
+  // The sections go in their own block; the methodology box is fixed below it (cv.css).
+  var main = '<main class="main"><div class="apartados">' + asList(d.orden).filter(function (key) {
     return MAIN_SECTIONS.indexOf(key) >= 0;
-  }).map(function (key) { return buildSection(key, d, texts); }).join("") + method + "</main>";
+  }).map(function (key) { return buildSection(key, d, texts); }).join("") + "</div>" + method + "</main>";
 
   return '<div class="cv ' + layout + '" style="' + esc(buildThemeStyle(theme, font)) + '">' + side + main + "</div>";
 }
@@ -215,23 +239,44 @@ function safePhoto(src) {
   return /^[a-z][a-z0-9+.-]*:/i.test(text) ? "" : text;
 }
 
+/**
+ * Makes the title and the sentence of the methodology box smaller when they
+ * are wider than the box, so each one stays on one line. The sizes in cv.css
+ * are the starting point; the sheet is painted again on every change, so
+ * nothing is left over from the previous text.
+ */
+function fitMethodText(doc) {
+  var lines = doc.querySelectorAll("#sheet .meto .pluma, #sheet .meto .frase");
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    line.style.fontSize = "";
+    var base = parseFloat(doc.defaultView.getComputedStyle(line).fontSize);
+    var size = fitFontSize(base, line.clientWidth, line.scrollWidth);
+    if (size && size !== base) line.style.fontSize = size + "px";
+  }
+}
+
 /** Paints the CV inside #sheet of the given document. */
 function renderSheet(doc, data, look) {
   var sheet = doc.getElementById("sheet");
   if (!sheet) return;
   sheet.innerHTML = buildCvHtml(data, look, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
+  fitMethodText(doc);
 }
 
 if (typeof module !== "undefined") {
   module.exports = {
     MAIN_SECTIONS: MAIN_SECTIONS,
+    METHOD_LIMITS: METHOD_LIMITS,
     escapeHtml: escapeHtml,
     safeLink: safeLink,
     getInitials: getInitials,
     joinSpanish: joinSpanish,
     cleanSteps: cleanSteps,
+    fitFontSize: fitFontSize,
     buildSection: buildSection,
     buildCvHtml: buildCvHtml,
+    fitMethodText: fitMethodText,
     renderSheet: renderSheet
   };
 }
