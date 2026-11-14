@@ -8,6 +8,13 @@
  * STATE.update(), so the sheet is painted again at once. createListEditor()
  * is the reusable piece for every list of rows.
  *
+ * Content limit: when STATE.update() refuses a change (the content would
+ * go further past the sheet than before, see fit.js), the field goes back
+ * to its last accepted text with the cursor where it was, or the row that
+ * was added or moved is put back, and a short notice shows next to it for
+ * a few seconds. setSheetFull() disables the "add row" buttons of the
+ * columns that have no room for one more row.
+ *
  * buildContactLink(), fitImageSize(), the tag and row helpers,
  * buildOrderRows(), orderFromRows(), clampText() and formatCharsLeft() do
  * not need the browser and are tested in Node.
@@ -137,6 +144,83 @@ function newFieldId(prefix) {
   return prefix + "-" + formIdCount;
 }
 
+/* ---------- Notice of the content limit ---------- */
+
+/* How long the notice stays, unless another change comes first. */
+var FULL_NOTICE_MS = 4000;
+
+/* The notice showing now: { element, view, timer }. Only one at a time. */
+var fullNotice = null;
+
+/* Which columns of the sheet have no room for one more row (setSheetFull). */
+var SHEET_FULL = { lado: false, main: false };
+
+/* The "add row" buttons that follow SHEET_FULL: their refresh functions. */
+var fullWatchers = [];
+
+/** The hidden notice element put after a field or a list. */
+function fullNoticeElement(doc) {
+  return el(doc, "p", { class: "help help-error full-notice", role: "alert", hidden: "" });
+}
+
+/** Shows the notice of the content limit in element, and hides it after a few seconds. */
+function showFullNotice(doc, element, texts) {
+  hideFullNotice();
+  var view = doc.defaultView;
+  element.textContent = texts.sheetFull;
+  element.hidden = false;
+  fullNotice = { element: element, view: view, timer: view.setTimeout(hideFullNotice, FULL_NOTICE_MS) };
+}
+
+/** Hides the notice showing now, if any (another change was made, or the time passed). */
+function hideFullNotice() {
+  if (!fullNotice) return;
+  fullNotice.view.clearTimeout(fullNotice.timer);
+  fullNotice.element.hidden = true;
+  fullNotice = null;
+}
+
+/**
+ * Tells the form which columns are full ({ lado, main }, from fit.js):
+ * the "add row" buttons of those columns are disabled, with the text
+ * "La hoja está llena" on hover, until there is room again.
+ */
+function setSheetFull(doc, full) {
+  SHEET_FULL = { lado: !!(full && full.lado), main: !!(full && full.main) };
+  fullWatchers.forEach(function (refresh) { refresh(); });
+}
+
+/**
+ * Joins a field to the data. apply(value) stores the value and returns
+ * false when the change was refused (the content limit): then the field
+ * goes back to its last accepted text, with the cursor where it was, and
+ * the notice shows. A limit (limitField) reads and cuts the value first.
+ * A <select> is read on change, the rest on every key.
+ */
+function bindInput(doc, input, texts, limit, notice, apply) {
+  var accepted = input.value;
+  var selection = null;
+  var isSelect = input.tagName === "SELECT";
+  if (!isSelect) {
+    // Before each edit, where the cursor is: the place it goes back to when the edit is undone.
+    input.addEventListener("beforeinput", function () {
+      selection = [input.selectionStart, input.selectionEnd];
+    });
+  }
+  input.addEventListener(isSelect ? "change" : "input", function () {
+    hideFullNotice();
+    var value = limit ? limit.read() : input.value;
+    if (apply(value) === false) {
+      input.value = accepted;
+      if (limit) limit.read();
+      if (selection && typeof input.setSelectionRange === "function") input.setSelectionRange(selection[0], selection[1]);
+      showFullNotice(doc, notice, texts);
+      return;
+    }
+    accepted = value;
+  });
+}
+
 /** Creates an element with attributes and text. */
 function el(doc, tag, attrs, text) {
   var node = doc.createElement(tag);
@@ -181,8 +265,9 @@ function limitField(doc, input, max, texts) {
 
 /**
  * A text field with its label. kind: "text" or "textarea".
- * onInput(value) is called on every key. maxLength (with texts) puts a limit
- * of characters with its counter.
+ * onInput(value) is called on every key; when it returns false the field
+ * goes back (bindInput). maxLength (with texts) puts a limit of characters
+ * with its counter.
  */
 function buildTextField(doc, opts) {
   var id = newFieldId("f");
@@ -195,16 +280,20 @@ function buildTextField(doc, opts) {
   var helpId = opts.help ? id + "-help" : null;
   if (helpId) input.setAttribute("aria-describedby", helpId);
   var limit = opts.maxLength ? limitField(doc, input, opts.maxLength, opts.texts) : null;
-  input.addEventListener("input", function () { opts.onInput(limit ? limit.read() : input.value); });
+  var notice = fullNoticeElement(doc);
+  bindInput(doc, input, opts.texts, limit, notice, opts.onInput);
   wrap.appendChild(input);
   if (opts.help) wrap.appendChild(el(doc, "p", { class: "help", id: helpId }, opts.help));
   if (limit) wrap.appendChild(limit.counter);
+  wrap.appendChild(notice);
   return wrap;
 }
 
 /**
  * A file picker shown as a button (its <label>), a remove button and a
- * status line. onFile(file, setStatus) reads the file; onRemove() clears it.
+ * status line. onFile(file, finish, setStatus, refused) reads the file:
+ * finish(error) ends it (with the message of a failure), refused() shows
+ * the notice of the content limit. onRemove() clears the file.
  */
 function buildFilePicker(doc, opts) {
   var id = newFieldId("file");
@@ -215,11 +304,13 @@ function buildFilePicker(doc, opts) {
   var pick = el(doc, "label", { for: id, class: "button" }, opts.chooseText);
   var remove = el(doc, "button", { type: "button", class: "button button-quiet" }, opts.removeText);
   var status = el(doc, "p", { class: "help", role: "status", "aria-live": "polite" });
+  var notice = fullNoticeElement(doc);
   row.appendChild(input);
   row.appendChild(pick);
   row.appendChild(remove);
   wrap.appendChild(row);
   wrap.appendChild(status);
+  wrap.appendChild(notice);
 
   function setStatus(text, isError) {
     status.textContent = text;
@@ -235,12 +326,14 @@ function buildFilePicker(doc, opts) {
     var file = input.files && input.files[0];
     input.value = ""; // the same file can be chosen again
     if (!file) return;
+    hideFullNotice();
     opts.onFile(file, function (error) {
       if (error) setStatus(error, true);
       else refresh();
-    }, setStatus);
+    }, setStatus, function () { showFullNotice(doc, notice, opts.texts); });
   });
   remove.addEventListener("click", function () {
+    hideFullNotice();
     opts.onRemove();
     refresh();
     pick.focus();
@@ -294,6 +387,9 @@ function readLogoFile(file, done) {
 /**
  * Editor for a list of rows (contact, experience, courses, steps…).
  * opts:
+ *   column             "lado" or "main": the column of the sheet the rows
+ *                      go to; the add button is disabled while that column
+ *                      is full (setSheetFull). Without it, never
  *   getList()          the array in STATE.data (created if missing)
  *   fields             [{ key, label, kind: "text" | "textarea" | "select",
  *                         options: [{ value, label }], format, parse, maxLength }]
@@ -306,7 +402,8 @@ function readLogoFile(file, done) {
  *   addText            text of the add button
  *   maxRows            optional, most rows allowed: the add button is
  *                      disabled when the list reaches it
- *   update(fn)         how to change the data (STATE.update)
+ *   update(fn)         how to change the data (STATE.update); false when
+ *                      the change was refused (the content limit)
  *   texts              TEXTS
  */
 function createListEditor(doc, opts) {
@@ -314,10 +411,12 @@ function createListEditor(doc, opts) {
   var root = el(doc, "div", { class: opts.stacked ? "rows rows-stacked" : "rows" });
   var list = el(doc, "ol", { class: "rows-list" });
   var empty = el(doc, "p", { class: "help" }, texts.listEmpty);
-  var add = el(doc, "button", { type: "button", class: "button" }, opts.addText || texts.rowAdd);
+  var add = el(doc, "button", { type: "button", class: "button rows-add", "data-column": opts.column || null }, opts.addText || texts.rowAdd);
+  var notice = fullNoticeElement(doc);
   root.appendChild(list);
   root.appendChild(empty);
   root.appendChild(add);
+  root.appendChild(notice);
 
   function rowLabel(text, index) {
     return text + " (" + texts.rowNumber + " " + (index + 1) + ")";
@@ -345,16 +444,18 @@ function createListEditor(doc, opts) {
     var helpId = field.help ? id + "-help" : null;
     if (helpId) input.setAttribute("aria-describedby", helpId);
     var limit = field.maxLength && field.kind !== "select" ? limitField(doc, input, field.maxLength, texts) : null;
-    input.addEventListener(field.kind === "select" ? "change" : "input", function () {
-      opts.update(function () {
+    var fieldNotice = fullNoticeElement(doc);
+    bindInput(doc, input, texts, limit, fieldNotice, function (value) {
+      return opts.update(function () {
         var items = opts.getList();
-        if (!setRowValue(items, index, field, limit ? limit.read() : input.value)) return;
+        if (!setRowValue(items, index, field, value)) return;
         if (opts.onRowChange) opts.onRowChange(items[index]);
       });
     });
     wrap.appendChild(input);
     if (field.help) wrap.appendChild(el(doc, "p", { class: "help", id: helpId }, field.help));
     if (limit) wrap.appendChild(limit.counter);
+    wrap.appendChild(fieldNotice);
     return wrap;
   }
 
@@ -367,11 +468,16 @@ function createListEditor(doc, opts) {
     return button;
   }
 
-  /** Runs a row action and keeps the focus on a sensible button. */
+  /**
+   * Runs a row action and keeps the focus on a sensible button. When the
+   * change is refused (the content limit), the list stays as it was and
+   * the notice shows under it.
+   */
   function act(action, index) {
     var focusIndex = index;
     var focusAction = action;
-    opts.update(function () {
+    hideFullNotice();
+    var accepted = opts.update(function () {
       var items = opts.getList();
       if (action === "up" || action === "down") {
         var to = moveRow(items, index, action === "up" ? -1 : 1);
@@ -384,6 +490,10 @@ function createListEditor(doc, opts) {
         focusIndex = addRow(items, opts.newItem());
       }
     });
+    if (accepted === false) {
+      focusIndex = index;
+      showFullNotice(doc, notice, texts);
+    }
     refresh();
     var rows = list.children;
     if (focusIndex < 0 || !rows[focusIndex]) { add.focus(); return; }
@@ -402,6 +512,17 @@ function createListEditor(doc, opts) {
     return typeof opts.maxRows === "number" && items.length >= opts.maxRows;
   }
 
+  /** The add button: disabled when the list is full or its column of the sheet is full. */
+  function refreshAdd() {
+    var listFull = isFull(opts.getList());
+    var sheetFull = !!(opts.column && SHEET_FULL[opts.column]);
+    add.disabled = listFull || sheetFull;
+    if (listFull) add.title = texts.listFull.replace("{n}", String(opts.maxRows));
+    else if (sheetFull) add.title = texts.sheetFullAdd;
+    else add.removeAttribute("title");
+  }
+  if (opts.column) fullWatchers.push(refreshAdd);
+
   function refresh() {
     var items = opts.getList();
     list.textContent = "";
@@ -418,9 +539,7 @@ function createListEditor(doc, opts) {
       list.appendChild(li);
     });
     empty.hidden = items.length > 0;
-    add.disabled = isFull(items);
-    if (add.disabled) add.title = texts.listFull.replace("{n}", String(opts.maxRows));
-    else add.removeAttribute("title");
+    refreshAdd();
   }
 
   add.addEventListener("click", function () { act("add", -1); });
@@ -435,28 +554,31 @@ function buildForm(doc, state, texts) {
   var host = doc.getElementById("form");
   if (!host) return;
   host.textContent = "";
+  hideFullNotice();
+  fullWatchers = []; // the buttons of the previous form are gone with it
   var data = function () { return state.data; };
+  /** set(key)(value) stores a field; false when the change was refused. */
   var set = function (key) {
-    return function (value) { state.update(function (d) { d[key] = value; }); };
+    return function (value) { return state.update(function (d) { d[key] = value; }); };
   };
 
   // Personal data
   var personal = buildFormSection(doc, texts.formPersonal, true);
   personal.body.appendChild(buildTextField(doc, {
-    label: texts.fieldName, value: data().nombre, autocomplete: "name", onInput: set("nombre")
+    label: texts.fieldName, value: data().nombre, autocomplete: "name", texts: texts, onInput: set("nombre")
   }));
   personal.body.appendChild(buildTextField(doc, {
-    label: texts.fieldJob, value: data().puesto, help: texts.fieldJobHelp, autocomplete: "organization-title", onInput: set("puesto")
+    label: texts.fieldJob, value: data().puesto, help: texts.fieldJobHelp, autocomplete: "organization-title", texts: texts, onInput: set("puesto")
   }));
   personal.body.appendChild(buildFilePicker(doc, {
     title: texts.fieldPhoto, accept: "image/*", chooseText: texts.photoChoose, removeText: texts.photoRemove,
-    setText: texts.photoSet, noneText: texts.photoNone,
+    setText: texts.photoSet, noneText: texts.photoNone, texts: texts,
     hasValue: function () { return !!data().foto; },
-    onFile: function (file, finish, setStatus) {
+    onFile: function (file, finish, setStatus, refused) {
       setStatus(texts.photoBusy);
       readPhotoFile(file, function (error, url) {
         if (error) { finish(texts.photoError); return; }
-        set("foto")(url);
+        if (!set("foto")(url)) refused();
         finish();
       });
     },
@@ -464,12 +586,12 @@ function buildForm(doc, state, texts) {
   }));
   personal.body.appendChild(buildFilePicker(doc, {
     title: texts.fieldLogo, accept: ".svg,image/svg+xml", chooseText: texts.logoChoose, removeText: texts.logoRemove,
-    setText: texts.logoSet, noneText: texts.logoNone,
+    setText: texts.logoSet, noneText: texts.logoNone, texts: texts,
     hasValue: function () { return !!data().monograma; },
-    onFile: function (file, finish) {
+    onFile: function (file, finish, setStatus, refused) {
       readLogoFile(file, function (error, svg) {
         if (error) { finish(texts.logoError); return; }
-        set("monograma")(svg);
+        if (!set("monograma")(svg)) refused();
         finish();
       });
     },
@@ -480,7 +602,7 @@ function buildForm(doc, state, texts) {
   // Profile
   var profile = buildFormSection(doc, texts.formProfile, false);
   profile.body.appendChild(buildTextField(doc, {
-    kind: "textarea", rows: 10, label: texts.fieldProfile, value: data().perfil, help: texts.profileHelp, onInput: set("perfil")
+    kind: "textarea", rows: 10, label: texts.fieldProfile, value: data().perfil, help: texts.profileHelp, texts: texts, onInput: set("perfil")
   }));
   host.appendChild(profile.element);
 
@@ -489,6 +611,7 @@ function buildForm(doc, state, texts) {
   var contactEditor = createListEditor(doc, {
     texts: texts,
     update: state.update,
+    column: "lado",
     getList: function () {
       if (!Array.isArray(state.data.contacto)) state.data.contacto = [];
       return state.data.contacto;
@@ -505,13 +628,14 @@ function buildForm(doc, state, texts) {
   contact.body.appendChild(contactEditor.element);
   host.appendChild(contact.element);
 
-  /** A folding section with a list of rows of state.data[key]. */
+  /** A folding section with a list of rows of state.data[key]. opts.column: the column of the sheet. */
   function addListSection(title, key, opts) {
     var section = buildFormSection(doc, title, false);
     if (opts.help) section.body.appendChild(el(doc, "p", { class: "help section-help" }, opts.help));
     var editor = createListEditor(doc, {
       texts: texts,
       update: state.update,
+      column: opts.column,
       stacked: opts.stacked,
       getList: opts.getList || function () {
         if (!Array.isArray(state.data[key])) state.data[key] = [];
@@ -532,15 +656,17 @@ function buildForm(doc, state, texts) {
 
   // Side column, in the order it is printed
   addListSection(texts.formLanguages, "idiomas", {
+    column: "lado",
     fields: [text("idioma", texts.fieldLanguage), text("nivel", texts.fieldLevel)],
     newItem: function () { return { idioma: "", nivel: "" }; }
   });
   addListSection(texts.formSkills, "habilidades", {
-    help: texts.skillsHelp, stacked: true,
+    help: texts.skillsHelp, stacked: true, column: "lado",
     fields: [text("grupo", texts.fieldGroup), text("items", texts.fieldItems)],
     newItem: function () { return { grupo: "", items: "" }; }
   });
   addListSection(texts.formOther, "otros", {
+    column: "lado",
     fields: [text("texto", texts.fieldOtherText), text("detalle", texts.fieldOtherDetail)],
     newItem: function () { return { texto: "", detalle: "" }; }
   });
@@ -550,17 +676,29 @@ function buildForm(doc, state, texts) {
   var orderSection = buildFormSection(doc, texts.formOrder, false);
   orderSection.body.appendChild(el(doc, "p", { class: "help section-help" }, texts.orderHelp));
   var orderList = el(doc, "ol", { class: "rows-list order-list" });
+  var orderNotice = fullNoticeElement(doc);
   orderSection.body.appendChild(orderList);
+  orderSection.body.appendChild(orderNotice);
   host.appendChild(orderSection.element);
 
   var sectionTitle = function (key) { return texts[MAIN_SECTION_TITLES[key]] || key; };
 
-  /** Saves the order, paints the rows again, moves the form sections and puts the focus back. */
+  /**
+   * Saves the order, paints the rows again, moves the form sections and
+   * puts the focus back. A refused change (showing a section that does
+   * not fit) leaves the rows as they were, with the notice under them.
+   */
   function changeOrder(change, focusKey, focusAction) {
-    state.update(function (d) {
+    hideFullNotice();
+    var before = orderRows.map(function (r) { return { key: r.key, shown: r.shown }; });
+    var accepted = state.update(function (d) {
       change();
       d.orden = orderFromRows(orderRows);
     });
+    if (!accepted) {
+      orderRows.splice.apply(orderRows, [0, orderRows.length].concat(before));
+      showFullNotice(doc, orderNotice, texts);
+    }
     refreshOrder();
     placeMainSections();
     var row = orderList.querySelector('[data-key="' + focusKey + '"]');
@@ -610,7 +748,7 @@ function buildForm(doc, state, texts) {
   var mainSections = {
     experiencia: function () {
       return addListSection(texts.formExperience, "experiencia", {
-        stacked: true,
+        stacked: true, column: "main",
         fields: [
           text("empresa", texts.fieldCompany), text("fecha", texts.fieldDate), text("puesto", texts.fieldRole),
           text("descripcion", texts.fieldDescription, { kind: "textarea" })
@@ -620,14 +758,14 @@ function buildForm(doc, state, texts) {
     },
     formacion: function () {
       return addListSection(texts.formEducation, "formacion", {
-        stacked: true,
+        stacked: true, column: "main",
         fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldCenter), text("fecha", texts.fieldDate)],
         newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
       });
     },
     cursos: function () {
       return addListSection(texts.formCourses, "cursos", {
-        stacked: true,
+        stacked: true, column: "main",
         // The second field is also used for a line of explanation; inside, it is still "centro"
         fields: [text("titulo", texts.fieldTitle), text("centro", texts.fieldSubtitle), text("fecha", texts.fieldDate)],
         newItem: function () { return { titulo: "", centro: "", fecha: "" }; }
@@ -654,7 +792,7 @@ function buildForm(doc, state, texts) {
   });
   method.body.insertBefore(buildTextField(doc, {
     label: texts.fieldMethodTitle, value: getMethod().titulo, maxLength: METHOD_LIMITS.title, texts: texts,
-    onInput: function (value) { state.update(function () { getMethod().titulo = value; }); }
+    onInput: function (value) { return state.update(function () { getMethod().titulo = value; }); }
   }), method.body.firstChild);
 
   /** Puts the main column sections of the form in the chosen order, before the methodology. */
@@ -699,6 +837,7 @@ if (typeof module !== "undefined") {
     getRowValue: getRowValue,
     setRowValue: setRowValue,
     buildOrderRows: buildOrderRows,
-    orderFromRows: orderFromRows
+    orderFromRows: orderFromRows,
+    FULL_NOTICE_MS: FULL_NOTICE_MS
   };
 }

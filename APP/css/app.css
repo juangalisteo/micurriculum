@@ -264,6 +264,9 @@ body {
 
 .help { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .help-error { color: #A33A2B; }
+/* Notice of the content limit, under the field or list whose change was undone (form.js). */
+.full-notice { font-weight: 500; }
+.full-notice[hidden] { display: none; }
 
 .file-row { display: flex; flex-wrap: wrap; gap: 8px; }
 

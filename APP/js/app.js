@@ -2,8 +2,11 @@
  * MiCurriculum · start-up: puts the texts and the version on the screen,
  * loads the data saved in the browser (or the sample data), builds the
  * form, the theme and layout controls, the copy buttons and the PDF
- * button, paints the CV again and saves it after every change, fits the sheet to the screen and warns when the CV does not fit
- * on one page.
+ * button, paints the CV again and saves it after every change, fits the
+ * sheet to the screen and warns when the CV does not fit on one page.
+ * The content limit (fit.js) is the guard of the store: a change of the
+ * form that makes the CV go further past the sheet is undone, and the
+ * form disables the "add row" buttons of a full column.
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -54,14 +57,17 @@ if (typeof document !== "undefined") {
       buildLookControls(document, STATE, TEXTS, THEMES, LAYOUTS, DEFAULT_LOOK);
     });
     buildExportAction(document, window, STATE, TEXTS);
+    var limit = createContentLimit(document, renderSheet);
+    var measure = function () { setSheetFull(document, limit.measure().full); };
+    STATE.setGuard(limit.guard);
     STATE.onChange(function (data, look) {
       renderSheet(document, data, look);
-      checkOverflow(document);
+      measure();
       saver.save(data, look);
     });
     renderSheet(document, STATE.data, STATE.look);
-    watchSheetFit(document);
-    checkOverflow(document);
+    watchSheetFit(document, measure);
+    measure();
   });
 }
 

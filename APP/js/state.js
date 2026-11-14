@@ -7,6 +7,11 @@
  * layout). replace() puts in other data and look at once (a copy
  * opened from a file, the data saved in the browser or the sample data).
  *
+ * A guard (setGuard) can refuse a change of update(): the data goes back
+ * to what it was and update() returns false. The program uses it for the
+ * content limit of the sheet (fit.js). updateLook() and replace() are
+ * never refused.
+ *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
  * License:   GPL-3.0-or-later (see LICENSE)
@@ -54,22 +59,34 @@ function moveRow(list, index, delta) {
 /**
  * Creates the store with a copy of the starting data and look.
  * update(fn) lets fn change the data and then tells every listener.
+ * It returns true when the change stays, false when the guard refused it
+ * (then the data is as before and the listeners are told anyway, so the
+ * sheet is painted back).
  */
 function createStore(initialData, initialLook) {
   var store = {
     data: cloneData(initialData),
     look: cloneData(initialLook),
-    listeners: []
+    listeners: [],
+    guard: null
   };
   store.onChange = function (listener) {
     store.listeners.push(listener);
+  };
+  /** guard(data, look) is asked after every update(); false undoes the change. */
+  store.setGuard = function (guard) {
+    store.guard = typeof guard === "function" ? guard : null;
   };
   function notify() {
     for (var i = 0; i < store.listeners.length; i++) store.listeners[i](store.data, store.look);
   }
   store.update = function (change) {
+    var previous = store.guard ? cloneData(store.data) : null;
     if (typeof change === "function") change(store.data);
+    var accepted = !store.guard || store.guard(store.data, store.look) !== false;
+    if (!accepted) store.data = previous;
     notify();
+    return accepted;
   };
   store.updateLook = function (change) {
     if (typeof change === "function") change(store.look);

@@ -22,6 +22,9 @@ var TEXTS = {
   previewTitle: "Vista previa",
   sheetOverflow: "El contenido no cabe en una página",
   noticeClose: "Cerrar aviso",
+  // Content limit: under the field or list whose change was undone, and on the disabled add buttons
+  sheetFull: "No cabe más en la hoja. Quita algo para añadir esto.",
+  sheetFullAdd: "La hoja está llena",
 
   // Saving: buttons of the top bar and their messages
   copySave: "Guardar copia",

@@ -1,7 +1,8 @@
 /*
  * MiCurriculum · tests for form.js (contact links, photo size, tags, rows,
  * the order of the sections and the limits of the methodology)
- * and state.js (the data and the rows of a list).
+ * and state.js (the data, the rows of a list and the guard that undoes
+ * a change: the content limit).
  *
  * Project:   MiCurriculum
  * Author:    Juan Bautista Galisteo Marqués (@juangalisteo)
@@ -101,6 +102,38 @@ test("store: starts with a copy of the sample data and tells about each change",
   assert.equal(SAMPLE_DATA.nombre, "Ana Ejemplo");
   assert.equal(SAMPLE_DATA.contacto.length, 6);
   assert.equal(SAMPLE_DATA.contacto[0].tipo, "lugar");
+});
+
+test("store: a guard keeps or undoes each change", () => {
+  const store = createStore(SAMPLE_DATA, DEFAULT_LOOK);
+  const seen = [];
+  store.onChange((data) => seen.push(data.nombre + "/" + data.cursos.length));
+  // without a guard, every change stays and update() says so
+  assert.equal(store.update((d) => { d.nombre = "Ana Uno"; }), true);
+  // the guard sees the changed data and the look; false undoes the change
+  const asked = [];
+  store.setGuard((data, look) => {
+    asked.push(data.nombre + "/" + data.cursos.length + "/" + look.formato);
+    return data.cursos.length <= 9;
+  });
+  assert.equal(store.update((d) => { d.nombre = "Ana Dos"; }), true);
+  assert.equal(store.update((d) => { addRow(d.cursos, { titulo: "Uno más", centro: "", fecha: "" }); }), false);
+  assert.equal(store.data.nombre, "Ana Dos");
+  assert.equal(store.data.cursos.length, 9);
+  assert.equal(store.data.cursos[8].titulo, "Curso de «Iniciación al dibujo»");
+  assert.deepEqual(asked, ["Ana Dos/9/izq", "Ana Dos/10/izq"]);
+  // the listeners are told after the undone change too, with the data as before
+  assert.deepEqual(seen, ["Ana Uno/9", "Ana Dos/9", "Ana Dos/9"]);
+  // removing goes through the guard like any change; the look and a whole replacement never ask it
+  assert.equal(store.update((d) => { removeRow(d.cursos, 0); }), true);
+  store.updateLook((look) => { look.formato = "una"; });
+  store.replace(SAMPLE_DATA, DEFAULT_LOOK);
+  assert.equal(asked.length, 3);
+  assert.equal(store.data.cursos.length, 9);
+  // a guard that is not a function is no guard
+  store.setGuard(null);
+  assert.equal(store.update((d) => { addRow(d.cursos, { titulo: "Otro", centro: "", fecha: "" }); }), true);
+  assert.equal(store.data.cursos.length, 10);
 });
 
 test("project tags: typed in one field, separated by commas", () => {
@@ -233,7 +266,8 @@ test("every new text of the form exists", () => {
     "formOther", "fieldOtherText", "fieldOtherDetail", "formExperience", "fieldCompany", "fieldDate", "fieldRole",
     "fieldDescription", "formEducation", "formCourses", "fieldTitle", "fieldCenter", "fieldSubtitle",
     "formMethod", "fieldMethodTitle", "methodHelp",
-    "fieldStep", "stepAdd", "formOrder", "orderHelp", "orderShow", "listFull", "charsLeftMany", "charsLeftOne"
+    "fieldStep", "stepAdd", "formOrder", "orderHelp", "orderShow", "listFull", "charsLeftMany", "charsLeftOne",
+    "sheetFull", "sheetFullAdd"
   ];
   for (const key of keys) assert.equal(typeof TEXTS[key], "string", key);
   assert.ok(TEXTS.charsLeftMany.includes("{n}"));
