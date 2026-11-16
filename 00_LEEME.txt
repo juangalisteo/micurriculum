@@ -1,0 +1,79 @@
+MICURRICULUM v1.0.0 - HAZ TU CURRICULUM
+(English: read 00_README_EN.txt)
+
+COMO ABRIRLO
+1. Copia la carpeta MICURRICULUM COMPLETA donde quieras.
+2. Abre MICURRICULUM y haz doble clic en 01_ABRIR.cmd. El programa se abre
+   en tu navegador (Chrome, Edge o Firefox) con los datos de ejemplo de Ana.
+   No hay que instalar nada y no hace falta Internet.
+3. En otro sistema (macOS, Linux) abre APP\index.html con el navegador.
+
+COMO SE USA
+- Panel de la izquierda, "Tus datos": cada apartado se abre con un clic.
+  Datos personales, Perfil, Contacto, Idiomas, Herramientas y habilidades,
+  Otros datos, Orden de los apartados, Formacion, Experiencia, Cursos y
+  Metodologia. Cambia los datos de ejemplo por los tuyos: la hoja de la
+  derecha cambia al momento.
+- Foto y logo: en Datos personales. Sin foto salen tus iniciales. El logo
+  es un archivo SVG.
+- Barra de arriba: Tema (Marca, Oceano, Burdeos y Claro) y Formato
+  (columna a la izquierda, a la derecha o una columna).
+- Orden de los apartados: sube, baja u oculta Formacion, Experiencia y
+  Cursos. La metodologia va siempre al final.
+- El CV es de una pagina. Si escribes algo que no cabe, el programa lo
+  deshace y avisa: "No cabe mas en la hoja. Quita algo para anadir esto."
+  Cuando una columna esta llena, el boton "Anadir fila" se desactiva.
+  Quitar o acortar siempre se puede.
+
+GUARDADO Y COPIAS (CARPETA MY_CV)
+- Todo se guarda solo en el navegador: al volver a abrir el programa, tus
+  datos siguen ahi.
+- "Guardar copia" descarga CV_NOMBRE_AAAAMMDD.json en Descargas. Muevelo
+  a la carpeta MY_CV. Sirve de copia de seguridad y para llevar el CV a
+  otro equipo con "Abrir CV.json".
+- El boton de la flecha circular vuelve a los datos de ejemplo. Borra los
+  tuyos: antes pregunta. Si los quieres conservar, guarda una copia antes.
+- Si limpias los datos del navegador, el CV se pierde. Por eso la copia.
+
+EXPORTAR EL PDF
+1. Pulsa "Exportar PDF". Se abre la ventana de imprimir del navegador con
+   el nombre CV_NOMBRE_AAAAMMDD ya puesto.
+2. Elige como destino "Guardar como PDF" (Chrome y Edge) o "Guardar en PDF"
+   (Firefox). NO uses "Microsoft Print to PDF": guarda la hoja como imagen
+   y los programas de seleccion de personal no pueden leer el texto.
+3. Si el navegador anade la fecha y la direccion en los bordes, desactiva
+   "Encabezados y pies de pagina" en las opciones.
+4. Guarda el archivo. Sale en A4, una pagina, con texto que se puede
+   seleccionar, enlaces que funcionan y sin margenes blancos.
+
+ACCESO DIRECTO EN EL ESCRITORIO
+Haz doble clic UNA VEZ en 02_CREAR_ACCESO_DIRECTO.cmd y aparecera
+MiCurriculum en el escritorio con su icono. Si mueves la carpeta, vuelve
+a abrirlo.
+
+PRIVACIDAD
+Tus datos se guardan solo en tu navegador y en los CV.json que descargas.
+El programa no se conecta a ninguna parte ni envia nada.
+
+ESTRUCTURA DE LA CARPETA
+MICURRICULUM
+  00_LEEME.txt                  Estas instrucciones
+  00_README_EN.txt              Estas instrucciones en ingles
+  01_ABRIR.cmd                  Abre MiCurriculum en el navegador
+  02_CREAR_ACCESO_DIRECTO.cmd   Crea el acceso directo del escritorio
+  APP\                          El programa: pagina, estilos, codigo, letras e icono
+  MY_CV\                        Tus copias CV.json
+  tests\                        Pruebas automaticas (node --test)
+  docs\                         Imagenes del README
+  README.md / README.es.md      Presentacion del proyecto en ingles / espanol (GitHub)
+  CHANGELOG.md / CHANGELOG.es.md  Historial de versiones
+  LICENSE                       Licencia GPL-3.0
+
+REQUISITOS
+Windows 10 u 11 y un navegador moderno (Chrome, Edge o Firefox).
+No necesita Python, Node.js ni Internet. Node.js solo hace falta para
+las pruebas automaticas (node --test).
+
+AUTOR
+Juan Bautista Galisteo Marqués (github.com/juangalisteo)
+Licencia GPL-3.0 (archivo LICENSE).
