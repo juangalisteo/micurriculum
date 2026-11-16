@@ -16,7 +16,7 @@ const { getText } = require("../APP/js/app.js");
 
 test("texts.js loads and has the program version", () => {
   assert.equal(typeof TEXTS, "object");
-  assert.equal(TEXTS.version, "0.1.0");
+  assert.equal(TEXTS.version, "1.0.0");
   assert.match(TEXTS.version, /^\d+\.\d+\.\d+$/);
 });
 
