@@ -99,7 +99,7 @@ test("store: starts with a copy of the sample data and tells about each change",
   ]);
   store.update((d) => { d.nombre = "Otra Persona"; });
   assert.equal(store.data.nombre, "Otra Persona");
-  assert.equal(SAMPLE_DATA.nombre, "Ana Ejemplo");
+  assert.equal(SAMPLE_DATA.nombre, "MiCurriculum");
   assert.equal(SAMPLE_DATA.contacto.length, 6);
   assert.equal(SAMPLE_DATA.contacto[0].tipo, "lugar");
 });

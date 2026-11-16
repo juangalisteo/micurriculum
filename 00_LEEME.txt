@@ -4,7 +4,7 @@ MICURRICULUM v1.0.0 - HAZ TU CURRICULUM
 COMO ABRIRLO
 1. Copia la carpeta MICURRICULUM COMPLETA donde quieras.
 2. Abre MICURRICULUM y haz doble clic en 01_ABRIR.cmd. El programa se abre
-   en tu navegador (Chrome, Edge o Firefox) con los datos de ejemplo de Ana.
+   en tu navegador (Chrome, Edge o Firefox) con un CV de ejemplo.
    No hay que instalar nada y no hace falta Internet.
 3. En otro sistema (macOS, Linux) abre APP\index.html con el navegador.
 

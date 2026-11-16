@@ -62,7 +62,7 @@ function safeLink(url) {
 /**
  * Initials of a Spanish name: first name + first surname.
  * "Juan Bautista Galisteo Marqués" → "JG" (first word and the one before the last).
- * With two words, first and last: "Ana Ejemplo" → "AE".
+ * With two words, first and last: "Luis Ejemplo" → "LE".
  */
 function getInitials(name) {
   var words = String(name == null ? "" : name).split(/\s+/).filter(Boolean);

@@ -27,7 +27,7 @@ First public release.
   copy) and **Abrir CV.json** (open); whatever is opened is cleaned before use.
 - **Exportar PDF** through the browser's print dialog: one-page A4, full bleed, with selectable
   text and working links.
-- Sample data of a made-up person ("Ana Ejemplo") and a ↻ button to restore it.
+- Made-up sample data built around the program itself ("MiCurriculum") and a ↻ button to restore it.
 - `APP\micurriculum.ico` icon, also used as favicon, and `02_CREAR_ACCESO_DIRECTO.cmd` for the
   desktop shortcut.
 - Automated tests with `node --test`.

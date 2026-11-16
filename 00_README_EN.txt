@@ -4,7 +4,7 @@ MICURRICULUM v1.0.0 - MAKE YOUR CV
 HOW TO OPEN IT
 1. Copy the WHOLE MICURRICULUM folder wherever you like.
 2. Open MICURRICULUM and double-click 01_ABRIR.cmd. The program opens in
-   your browser (Chrome, Edge or Firefox) with Ana's sample data.
+   your browser (Chrome, Edge or Firefox) with a sample CV.
    There is nothing to install and no Internet is needed.
 3. On another system (macOS, Linux) open APP\index.html in the browser.
 

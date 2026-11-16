@@ -74,8 +74,8 @@ test("the main column follows the chosen order and skips unknown keys", () => {
 test("sample data paints initials, theme colors on the sheet and the default layout", () => {
   const html = render(SAMPLE_DATA);
   assert.match(html, /^<div class="cv izq" style="--lateral:#22343D;/);
-  assert.ok(html.includes('<div class="iniciales">AE</div>'));
-  assert.ok(html.includes("Ana Ejemplo"));
+  assert.ok(html.includes('<div class="iniciales">M</div>'));
+  assert.ok(html.includes("MiCurriculum"));
   const other = render(SAMPLE_DATA, { tema: "oceano", formato: "dcha" });
   assert.match(other, /^<div class="cv dcha" style="--lateral:#1F3A5F;/);
   const fallback = render(SAMPLE_DATA, { tema: "nope", formato: "nope" });

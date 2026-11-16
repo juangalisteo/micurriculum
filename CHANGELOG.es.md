@@ -27,7 +27,7 @@ Primera versión publicada.
   y **Abrir CV.json**; lo que se abre se limpia antes de usarse.
 - **Exportar PDF** con la impresión del navegador: A4 de una página, a sangre, con texto que se
   puede seleccionar y enlaces que funcionan.
-- Datos de ejemplo de una persona inventada («Ana Ejemplo») y botón ↻ para volver a ellos.
+- Datos de ejemplo inventados en torno al propio programa («MiCurriculum») y botón ↻ para volver a ellos.
 - Icono `APP\micurriculum.ico`, también como favicon, y `02_CREAR_ACCESO_DIRECTO.cmd` para el
   acceso directo del escritorio.
 - Pruebas automáticas con `node --test`.
