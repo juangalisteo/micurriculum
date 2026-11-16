@@ -75,7 +75,7 @@ test("the limit of a column is the top of the methodology box, or the sheet with
 test("the sections may end anywhere above the box; past its top, the warning", () => {
   const box = 918.5;
   const limit = contentLimit(A4_HEIGHT, box);
-  // the sample data: the courses end 28 px above the box
+  // made-up sizes (the sample data of lot 8d): the courses end 28 px above the box
   assert.equal(columnsOverflow([{ bottom: 1085, limit: A4_HEIGHT }, { bottom: 889.9, limit }]), false);
   // the sections reach the box
   assert.equal(columnsOverflow([{ bottom: 1085, limit: A4_HEIGHT }, { bottom: box + OVERFLOW_TOLERANCE, limit }]), false);
@@ -100,7 +100,7 @@ const box = 918.5;
 const limit = contentLimit(A4_HEIGHT, box);
 
 test("how far the content goes past the limit: 0 when it fits", () => {
-  // the sample data in two columns: the side footer at the bottom, the courses 28 px above the box
+  // made-up sizes (the sample data of lot 8d): the side footer at the bottom, the courses 28 px above the box
   assert.equal(overflowAmount([{ bottom: 1085, limit: A4_HEIGHT }, { bottom: 889.9, limit }]), 0);
   assert.equal(overflowAmount([{ bottom: box + OVERFLOW_TOLERANCE, limit }]), 0); // rounding
   assert.equal(overflowAmount([]), 0);
@@ -144,7 +144,7 @@ test("when the sheet already did not fit, only changes that make it worse are un
 test("a column is full when one more row would not fit", () => {
   const main = (free, need) => ({ name: "main", bottom: limit - free, limit, free, need });
   const side = (free, need) => ({ name: "lado", bottom: 1085, limit: A4_HEIGHT, free, need });
-  // the sample data: 28 px free in the main column, a row needs about 35 px
+  // made-up sizes (the sample data of lot 8d): 28 px free in the main column, a row needs about 35 px
   assert.deepEqual(columnsFull([side(300, 21), main(28, 35)]), { lado: false, main: true });
   assert.deepEqual(columnsFull([side(300, 21), main(35, 35)]), { lado: false, main: false });
   assert.deepEqual(columnsFull([side(20, 21), main(100, 35)]), { lado: true, main: false });

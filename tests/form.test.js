@@ -114,26 +114,26 @@ test("store: a guard keeps or undoes each change", () => {
   const asked = [];
   store.setGuard((data, look) => {
     asked.push(data.nombre + "/" + data.cursos.length + "/" + look.formato);
-    return data.cursos.length <= 9;
+    return data.cursos.length <= 6;
   });
   assert.equal(store.update((d) => { d.nombre = "Ana Dos"; }), true);
   assert.equal(store.update((d) => { addRow(d.cursos, { titulo: "Uno más", centro: "", fecha: "" }); }), false);
   assert.equal(store.data.nombre, "Ana Dos");
-  assert.equal(store.data.cursos.length, 9);
-  assert.equal(store.data.cursos[8].titulo, "Curso de «Iniciación al dibujo»");
-  assert.deepEqual(asked, ["Ana Dos/9/izq", "Ana Dos/10/izq"]);
+  assert.equal(store.data.cursos.length, 6);
+  assert.equal(store.data.cursos[5].titulo, "Curso online de herramientas digitales");
+  assert.deepEqual(asked, ["Ana Dos/6/izq", "Ana Dos/7/izq"]);
   // the listeners are told after the undone change too, with the data as before
-  assert.deepEqual(seen, ["Ana Uno/9", "Ana Dos/9", "Ana Dos/9"]);
+  assert.deepEqual(seen, ["Ana Uno/6", "Ana Dos/6", "Ana Dos/6"]);
   // removing goes through the guard like any change; the look and a whole replacement never ask it
   assert.equal(store.update((d) => { removeRow(d.cursos, 0); }), true);
   store.updateLook((look) => { look.formato = "una"; });
   store.replace(SAMPLE_DATA, DEFAULT_LOOK);
   assert.equal(asked.length, 3);
-  assert.equal(store.data.cursos.length, 9);
+  assert.equal(store.data.cursos.length, 6);
   // a guard that is not a function is no guard
   store.setGuard(null);
   assert.equal(store.update((d) => { addRow(d.cursos, { titulo: "Otro", centro: "", fecha: "" }); }), true);
-  assert.equal(store.data.cursos.length, 10);
+  assert.equal(store.data.cursos.length, 7);
 });
 
 test("project tags: typed in one field, separated by commas", () => {

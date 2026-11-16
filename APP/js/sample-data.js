@@ -32,7 +32,6 @@ var SAMPLE_DATA = {
     { empresa: "Estudio Gráfico Ejemplo", fecha: "2025 – 2026", puesto: "Diseñadora gráfica", descripcion: "" },
     { empresa: "Imprenta La Muestra", fecha: "2024", puesto: "", descripcion: "" },
     { empresa: "Gestoría Modelo · Servicios a pequeñas empresas", fecha: "2021 – 2024", puesto: "Auxiliar administrativa", descripcion: "" },
-    { empresa: "Tienda de Barrio", fecha: "2020", puesto: "Dependienta", descripcion: "" },
     { empresa: "Asociación Cultural Prueba", fecha: "2019 – 2020", puesto: "Voluntaria en actividades culturales", descripcion: "" }
   ],
   formacion: [
@@ -46,10 +45,7 @@ var SAMPLE_DATA = {
     { titulo: "Maquetación de revistas y libros", centro: "", fecha: "2022" },
     { titulo: "Contabilidad básica", centro: "", fecha: "2022" },
     { titulo: "Fotografía de producto", centro: "", fecha: "2022" },
-    { titulo: "Curso online de herramientas digitales", centro: "Productividad y trabajo en equipo", fecha: "2021 – 2022" },
-    { titulo: "Prevención de riesgos laborales", centro: "", fecha: "2021" },
-    { titulo: "Primeros auxilios", centro: "", fecha: "2020" },
-    { titulo: "Curso de «Iniciación al dibujo»", centro: "", fecha: "2018" }
+    { titulo: "Curso online de herramientas digitales", centro: "Productividad y trabajo en equipo", fecha: "2021 – 2022" }
   ],
   proyectos: [],
   habilidades: [
